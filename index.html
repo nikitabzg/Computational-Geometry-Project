@@ -1,0 +1,46 @@
+
+<html>
+<head>
+<meta charset="UTF-8">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
+<script language="javascript" type="text/javascript">
+
+class Point {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+    
+var points = [];
+
+function setup() {
+    createCanvas(640, 480);
+    fill('black');
+}
+
+function draw() {
+    background(200);
+    for (i in points) {
+	ellipse(points[i].x,points[i].y,4,4);
+    }
+}
+
+
+function mousePressed() {
+    points.push(new Point(mouseX,mouseY));
+}
+
+
+</script>
+<style> body {padding: 0; margin: 0;} </style>
+</head>
+
+<body>
+
+<h1> Nearest neighbour decision boundary </h1>
+This website is dedicated to explaining and illustrating the paper called 
+<strong>Nearest neighbour decision boundary</strong>, by <em>David Bremmer, Erik Demaine, 
+Jeff Erickson, John Iacono, Stefan Langerman, Pat Morin, Godfried Toussaint</em>.
+</body>
+</html>
