@@ -43,5 +43,42 @@ function mousePressed() {
 This website is dedicated to explaining and illustrating the paper called 
 <strong>Nearest neighbour decision boundary</strong>, by <em>David Bremmer, Erik Demaine, 
 Jeff Erickson, John Iacono, Stefan Langerman, Pat Morin, Godfried Toussaint</em>.
+<h2> Problem definition </h2>
+<p>The nearest neighbour problem is an optimisation problem. When receiving a new point, its goal is to find the nearest point to the new point
+from a given set of points. All points have a colour (in this website we will work on a 2 colours basis : each point is either red or blue). The new
+point will receive the same colour as its closest neighbour.<br>
+In this case, we consider that our points are found in a limited plane surface, and the distance between them is the physical distance in the plane.</p>
+<p> This problem has many real-world applications. For example, TODO </p>
+<h3> More formal definition </h3>
+We have a set <em>S</em> called training set of <em>n</em> points, separated in two subsets : the subset <em>R</em> (red points) and the subset <em>B</em> 
+(blue points). The nearest neighbour problem aims to find the colour of a new point <em>q</em>, given the fact that <em>q</em>'s colour will be the colour
+ of its closest neighbour from <em>S</em>. The nearest neighbour rule partitions the plane into a red and a blue set, which meet at the decision boundary.
+<h2> Voronoi Condensing </h2>
+<p>One interesting observation is that all points from the training set <em>S</em> are not useful for solving the problem, and therefore the size of the training
+set can be reduced in order to obtain better time results. One method for reducing the training set size is based on the construction of Voronoi diagrams.
+The method goes as follows : Construct the Voronoi diagram for the given points. For each cell, if it is only surrounded by cells of the same colour,
+delete the point. This method is called <strong>Voronoi condensing</strong>. The Voronoi condensing can be done in <em>O(n logn)</em>.</p>
+<p>However, we shall describe a method that allows us to do the Voronoi condensing in <em>O(n logk)</em>, where k is the numbber of points that remain
+after condensing. </p>
+<h2> Delaunay triangulations </h2>
+The method we will use in our website is based on Delaunay triangulations. Let us first give some definitions: <br>
+A <strong>Delaunay triangle</strong> in S is a triangle whose vertices <em>v1, v2, v3</em> are in S and such that the circle with <em>v1</em>, <em>v2</em> 
+and <em>v3</em> on its boundary does not contain any point from S in it.<br>
+A <strong>Delaunay triangulation</strong> of S is a partitioning of the convex hull of S into Delaunay triangles.<br>
+A <strong>Delaunay edge</strong> is a line segment whose vertices <em>v1, v2</em> are in S and such that there exists a circle with <em>v1</em> and <em>v2</em>
+on its boundary such that it does not contain any point from S in its interior.<br>
+A <strong>bichromatic Delaunay edge</strong> is a Delaunay edge whose two vertices have different colours, i.e. one is red and the other one is blue.<br>
+A <strong>bichromatic Delaunay triangle</strong> is a Delaunay triangle whose set of defining vertices contain two vertices of different colours, i.e. there 
+is at least one blue vertex and at least one red vertex.<br>
+If S is in general position (i.e. there exists no set of 4 points from S such that they all lie on the boundary of the same circle), then the Delaunay
+triangulation is unique and contains all the Delaunay edges. Thus, finding all the bichromatic Delaunay edges can be used to compute the nearest neighbour
+decision boundary.
+<h3> Pivots </h3>
+A very useful tool we will use in order to construct Delaunay triangulations is the <em>pivot operation</em>, which works as follows : <br>
+Given a ray, the pivot operations returns the biggest circle whose center is on the ray, has the origin of the ray on its boundary and has no point of S 
+in its interior. 
+<h3> Finding the first edge </h3>
+To begin, we will try to find a bichromatic edge in the set of points S. We will begin by linking any Red point from S to any blue point from S, creating a ray.
+
 </body>
 </html>
