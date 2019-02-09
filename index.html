@@ -2,39 +2,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
-<script language="javascript" type="text/javascript">
+	<meta charset="UTF-8">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
+	<script src="...js" type="text/javascript"></script>
+	<script language="javascript" type="text/javascript">
 
-class Point {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-    }
-}
-    
-var points = [];
+	class Point {
+		constructor(x, y, colour) {
+			this.x = x;
+			this.y = y;
+			this.colour = colour;
+		}
+	}
+		
+	var points = [];
+	var isColourRed = true;
+	var pointColour = "red";
 
-function setup() {
-    createCanvas(640, 480);
-    fill('black');
-}
+	function setup() {
+		let canvas = createCanvas(640, 480);
+		canvas.parent("canvas");
+		fill("black");
+	}
 
-function draw() {
-    background(200);
-    for (i in points) {
-	ellipse(points[i].x,points[i].y,4,4);
-    }
-}
-
-
-function mousePressed() {
-    points.push(new Point(mouseX,mouseY));
-}
+	function draw() {
+		background(200);
+		for (i in points) {
+			fill(points[i].colour);
+			ellipse(points[i].x,points[i].y,4,4);
+		}
+	}
 
 
-</script>
-<style> body {padding: 0; margin: 0;} </style>
+	function mousePressed() {
+		points.push(new Point(mouseX,mouseY, pointColour));
+	}
+
+	window.onload = function () {
+		let button = document.getElementById("colour");
+		button.addEventListener("click", function () {
+                if (isColourRed) {
+                    pointColour = "blue";
+                    this.innerHTML = "Red";
+					isColourRed = false;
+                }
+                else {
+                    pointColour = "red";
+                    this.innerHTML = "Blue";
+					isColourRed = true;
+                }
+            });
+	}
+
+	</script>
+	<style> body {padding: 0; margin: 5;} </style>
 </head>
 
 <body>
@@ -113,6 +134,9 @@ contains a blue vertex <em>b</em>, then pivot in <em>R</em> along the ray with o
 Add <em>r</em> to <em>Q</em> and continue. The same should also be done for <em>t</em> with a red vertex (then the pivot is done on <em>B</em>). If both pivots
 find the circle <em>C(t)</em>, then we have proved the first subpoint of the previous lemma for <em>t</em>. When this is the result for all the triangles, 
 we can conclude that we have found the complete set of relevant vertices. </p>
+
+<div id="canvas"></div>
+<button id="colour">Bleu</button>
 
 </body>
 </html>
