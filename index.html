@@ -79,6 +79,40 @@ Given a ray, the pivot operations returns the biggest circle whose center is on 
 in its interior. 
 <h3> Finding the first edge </h3>
 To begin, we will try to find a bichromatic edge in the set of points S. We will begin by linking any Red point from S to any blue point from S, creating a ray.
+<h4> First circle </h4>
+Let's call the previously selected red point <em>r</em>, the previously selected blue point <em>b</em> and the previously formed ray <em>RAY</em>.
+We will apply the pivot operation with ray <em>RAY</em> on <em>B</em>, with origin on <em>r</em>. By definition of the pivot operation, the formed circle is 
+the maximal one without any point from <em>B</em> in its interior. Therefore, there must be a point from <em>B</em>, let's call it <em>b'</em>, on the boundary
+of the formed circle (otherwise the circle could possibly be extended). Note that <em>b'</em> could possibly be <em>b</em>. Let's call the obtained circle 
+<em>C</em>
+<h4> Second circle </h4>
+<p>The first circle is done and we can now build a second one. Let us create a new ray, called <em>RAY2</em>. This ray unites <em>b'</em> and the center of 
+<em>C</em>. We pivot on the set <em>R</em> with ray <em>RAY1</em> and origin <em>b'</em>. By doing this, we obtain a second circle, that we shall call
+<em>C1</em>.</p>
+<p>First of all, by creation, <em>C'</em> is inside <em>C</em>. Second, we know that <em>C'</em> has <em>b'</em> and some red point <em>r'</em> on its boundary.
+Third, we know that there are no points of <em>B</em> in <em>C</em>. Finally, we also know that by construction there are no points from <em>R</em> in 
+<em>C1</em>. Therefore, there is no point from <em>S</em> in <em>C1</em>. We have thus created a circle with no point from <em>S</em> in its interior and
+with a red point <em>r'</em> and a blue one <em>b'</em> on its boundary. We can conclude that <em>(r',b')</em> is a bichromatic edge.</p> 
+<h3> Finding additional points </h3>
+<p>We shall call <em>Q</em> the subset of <em>S</em> representing the set of vertices of <em>S</em> that contribute to the decision boundary. We shall also call
+<em>P</em> the current set of found relevant vertices. Therefore, we have the relation <em>P</em> &sube; <em>Q</em> &sube; <em>S</em>.</p>
+By the rule of the two circles applied above, <em>Q</em> already contains an edge (i.e., 2 vertices). In order to find additional edges, we shall use the 
+<strong>Augmented Delaunay triangulation</strong> method. This method consists in finding the Delaunay triangulation of <em>P</em> &cup; <em>{v1, v2, v3}</em> 
+where <em>v1, v2, v3</em> are 3 black vertices set to infinity. We call them black in order not to give them the same colour as any of the points from 
+<em>S</em>. Please note that <em>v1, v2, v3</em> &#8840; <em>S</em>.</p>
+For any triangle <em>t</em>, we will call <em>C(t)</em> the circle that contains the 3 vertices defining <em>t</em> on its boundary. We will use the following
+lemma : <br>
+Let &#8709;&ne;<em>P</em>&sube;<em>Q</em>. The following statements are equivalent : <br>
+1. For every triangle t in the augmented Delaunay triangulation of <em>P</em>, if t has a blue (resp. red) vertex then <em>C(t)</em> does not have a red (resp.
+blue) point of S in its interior. <br>
+2. <em>P</em>=<em>Q</em>. <br>
+
+<p>In order to find the additional points, we will iterate on each triangle <em>t</em> from the current Delaunay triangulation of <em>P</em>. If <em>t</em>
+contains a blue vertex <em>b</em>, then pivot in <em>R</em> along the ray with origin at <em>b</em> and passing through <em>C(t)</em>. If the result is
+<em>C(t)</em> itself, move on. Else, there must be a red point <em>r</em> on the boundary of the found circle. This point should normally be in <em>Q</em>.
+Add <em>r</em> to <em>Q</em> and continue. The same should also be done for <em>t</em> with a red vertex (then the pivot is done on <em>B</em>). If both pivots
+find the circle <em>C(t)</em>, then we have proved the first subpoint of the previous lemma for <em>t</em>. When this is the result for all the triangles, 
+we can conclude that we have found the complete set of relevant vertices. </p>
 
 </body>
 </html>
