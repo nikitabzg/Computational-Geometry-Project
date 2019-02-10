@@ -3,8 +3,6 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
-	<script src="...js" type="text/javascript"></script>
 	<script language="javascript" type="text/javascript">
 
 	class Point {
@@ -16,31 +14,38 @@
 	}
 		
 	var points = [];
+	var redPoints = [];
+	var bluePoints = [];
 	var isColourRed = true;
 	var pointColour = "red";
 
-	function setup() {
-		let canvas = createCanvas(640, 480);
-		canvas.parent("canvas");
-		fill("black");
+	
+	function drawPoint(point){
+		let canvas = document.getElementById('myCanvas');
+		let ctx = canvas.getContext('2d');
+		ctx.beginPath();
+		ctx.arc(point.x, point.y, 4, 0, 2*Math.PI);
+		ctx.fillStyle = pointColour;
+		ctx.fill();
 	}
-
-	function draw() {
-		background(200);
-		for (i in points) {
-			fill(points[i].colour);
-			ellipse(points[i].x,points[i].y,4,4);
-		}
-	}
-
-
-	function mousePressed() {
-		points.push(new Point(mouseX,mouseY, pointColour));
-	}
-
+	
 	window.onload = function () {
-		let button = document.getElementById("colour");
-		button.addEventListener("click", function () {
+		let canvas = document.getElementById('myCanvas');
+		canvas.addEventListener('click',function(evt){
+			let xCoord = evt.clientX;
+			let yCoord = evt.clientY;
+			let p = new Point(xCoord, yCoord, pointColour);
+			points.push(p);
+			if (pointColour == "red"){
+				redPoints.push(p);
+			} else {
+				bluePoints.push(p);
+			}
+			drawPoint(p);
+		},false);
+	
+		let colourButton = document.getElementById("colour");
+		colourButton.addEventListener("click", function () {
                 if (isColourRed) {
                     pointColour = "blue";
                     this.innerHTML = "Red";
@@ -52,6 +57,27 @@
 					isColourRed = true;
                 }
             });
+		let saveButton = document.getElementById("saveB");
+		saveButton.addEventListener("click", function() {
+				let p1 = 0;
+				let p2 = 0;
+				if (redPoints.length >= 1){
+					p1 = Math.floor(Math.random()*redPoints.length);
+				} 
+				
+				if (bluePoints.length >= 1){
+					p2 = Math.floor(Math.random()*bluePoints.length);
+				}
+				
+				let ctx = canvas.getContext("2d");
+				ctx.beginPath();
+				ctx.moveTo(points[p1].x, points[p1].y);
+				ctx.lineTo(points[p2].x, points[p2].y);
+				console.log(p1.color);
+				console.log(p2.color);
+				ctx.stroke();
+				
+			})
 	}
 
 	</script>
@@ -135,8 +161,9 @@ Add <em>r</em> to <em>Q</em> and continue. The same should also be done for <em>
 find the circle <em>C(t)</em>, then we have proved the first subpoint of the previous lemma for <em>t</em>. When this is the result for all the triangles, 
 we can conclude that we have found the complete set of relevant vertices. </p>
 
-<div id="canvas"></div>
-<button id="colour">Bleu</button>
-
+<canvas id="myCanvas" width="640" height="480" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.</canvas>
+<button id="colour">Blue</button>
+<button id="saveB">Save+Draw</button>
 </body>
 </html>
