@@ -19,35 +19,51 @@
 	var isColourRed = true;
 	var pointColour = "red";
 	var rect = 0;
+	var edges = [];
 	
 	function drawPoint(point){
 		let canvas = document.getElementById('myCanvas');
 		let ctx = canvas.getContext('2d');
 		rect = canvas.getBoundingClientRect();
-		console.log(rect);
 		ctx.beginPath();
 		ctx.arc(point.x - rect.left, point.y - rect.top, 4, 0, 2*Math.PI);
 		ctx.fillStyle = pointColour;
 		ctx.fill();
 	}
 	
+	function drawCircle(edge){
+		let p1 = edge[0];
+		let p2 = edge[1];
+		
+	}
+	
+	function drawLine(p1, p2){
+		let canvas = document.getElementById('myCanvas');
+		let ctx = canvas.getContext("2d");
+		ctx.beginPath();
+		ctx.moveTo(redPoints[p1].x - rect.left, redPoints[p1].y - rect.top);
+		ctx.lineTo(bluePoints[p2].x - rect.left, bluePoints[p2].y - rect.top);				
+				
+		ctx.stroke();
+	}
+	
+	
+	function createPoint(evt){
+		let xCoord = evt.clientX;
+		let yCoord = evt.clientY;
+		let p = new Point(xCoord, yCoord, pointColour);
+		points.push(p);
+		if (pointColour == "red"){
+			redPoints.push(p);
+		} else {
+			bluePoints.push(p);
+		}
+		drawPoint(p);
+	}
 	
 	window.onload = function () {
 		let canvas = document.getElementById('myCanvas');
-		//let rect = canvas.getBoundingClientRect();
-		console.log(rect);
-		canvas.addEventListener('click',function(evt){
-			let xCoord = evt.clientX;
-			let yCoord = evt.clientY;
-			let p = new Point(xCoord, yCoord, pointColour);
-			points.push(p);
-			if (pointColour == "red"){
-				redPoints.push(p);
-			} else {
-				bluePoints.push(p);
-			}
-			drawPoint(p);
-		},false);
+		canvas.addEventListener('click',createPoint);
 	
 		let colourButton = document.getElementById("colour");
 		colourButton.addEventListener("click", function () {
@@ -73,14 +89,10 @@
 				if (bluePoints.length >= 1){
 					p2 = Math.floor(Math.random()*bluePoints.length);
 				}
-				
-				let ctx = canvas.getContext("2d");
-				ctx.beginPath();
-				ctx.moveTo(redPoints[p1].x - rect.left, redPoints[p1].y - rect.top);
-				ctx.lineTo(bluePoints[p2].x - rect.left, bluePoints[p2].y - rect.top);				
-				
-				ctx.stroke();
-				
+				document.getElementById("saveB").disabled=true;
+				document.getElementById("colour").disabled=true;
+				canvas.removeEventListener('click',createPoint);
+				drawLine(p1, p2);
 			})
 	}
 
