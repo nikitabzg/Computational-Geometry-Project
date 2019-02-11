@@ -20,6 +20,7 @@
 	var pointColour = "red";
 	var rect = 0;
 	var edges = [];
+	var currentPoints = [];
 	
 	function drawPoint(point){
 		let canvas = document.getElementById('myCanvas');
@@ -31,10 +32,86 @@
 		ctx.fill();
 	}
 	
-	function drawCircle(edge){
-		let p1 = edge[0];
-		let p2 = edge[1];
+	function drawFirstCircles(){
+		let p1 = currentPoints[0];
+		let p2 = currentPoints[1];
+		if (p1.colour == "red"){
+			drawBlueCircle(p2);
+			drawRedCircle(p1);
+		} else {
+			drawBlueCircle(p1);
+			drawRedCircle(p2);
+		}
+	}
+	
+	function drawRedCircle(p){
+		let current = advanceCenter(p);
+		let radius = calculateDistance(current, p);
+		console.log(current);
+		console.log(current.x);
+		console.log(current.y);
+		var c = document.getElementById("myCanvas");
+		var ctx = c.getContext("2d");
+		ctx.beginPath();
+		ctx.arc(current.x-rect.left, current.y-rect.top, radius, 0, 2*Math.PI);
+		//ctx.arc(100, 75, 50, 0, 2 * Math.PI);
+		ctx.stroke();
+	}
+	
+	function drawBlueCircle(edge, p){
+	}
+	
+	function calculateXdistance(p1, p2){
+		let xDist = p2.x - p1.x;
+		if (xDist<0){
+			xDist = -xDist;
+		}
+		return xDist;
+	}
+	
+	function calculateDistance(p1, p2){
+		let x1 = p1.x;
+		let y1 = p1.y;
+		let x2 = p2.x;
+		let y2 = p2.y;
 		
+		let distance = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+		return distance;
+	}
+	
+	function calculateM(){
+		let p1 = currentPoints[0];
+		let p2 = currentPoints[1];
+		let m = ((p2.y - rect.top)-(p1.y - rect.top))/((p2.x - rect.left)-(p1.x - rect.left));
+		return m;
+	}
+	
+	function advanceCenter(current){
+		let p1 = currentPoints[0];
+		let p2 = currentPoints[1];
+		
+		let m = calculateM();
+		if (m<0){
+			m = -m;
+		}
+		let x1 = p1.x - rect.left;
+		let y1 = p1.y - rect.top;
+		let x2 = p2.x - rect.left;
+		let y2 = p2.y - rect.top;
+		let xc = 0;
+		let yc = 0;
+		if (p1.x < p2.x){
+			xc = current.x + 1;
+		} else {
+			xc = current.x - 1;
+		}
+		if (p1.y < p2.y){
+			yc = current.y + m;
+		} else {
+			yc = current.y - m;
+		}
+		let newCenter = new Point(xc, yc, "black");
+		return newCenter;
 	}
 	
 	function drawLine(p1, p2){
@@ -61,6 +138,7 @@
 		drawPoint(p);
 	}
 	
+	
 	window.onload = function () {
 		let canvas = document.getElementById('myCanvas');
 		canvas.addEventListener('click',createPoint);
@@ -84,17 +162,28 @@
 				let p2 = 0;
 				if (redPoints.length >= 1){
 					p1 = Math.floor(Math.random()*redPoints.length);
-				} 
-				
+					currentPoints[0] = redPoints[p1];
+				} else {
+					// TODO error gestion
+				}
 				if (bluePoints.length >= 1){
 					p2 = Math.floor(Math.random()*bluePoints.length);
+					currentPoints[1] = bluePoints[p2];
+				} else {
+					// TODO error gestion
 				}
 				document.getElementById("saveB").disabled=true;
 				document.getElementById("colour").disabled=true;
 				canvas.removeEventListener('click',createPoint);
 				drawLine(p1, p2);
+			});
+			
+		let circleButton = document.getElementById("circleB");
+		circleButton.addEventListener("click", function() {
+				drawFirstCircles();
 			})
 	}
+	
 
 	</script>
 	<style> body {padding: 0; margin: 5;} </style>
@@ -180,6 +269,7 @@ we can conclude that we have found the complete set of relevant vertices. </p>
 <canvas id="myCanvas" width="640" height="480" style="border:1px solid #d3d3d3;">
 Your browser does not support the HTML5 canvas tag.</canvas>
 <button id="colour">Blue</button>
-<button id="saveB">Save+Draw</button>
+<button id="saveB">First line</button>
+<button id="circleB">Draw Circles</button>
 </body>
 </html>
