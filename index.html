@@ -23,6 +23,8 @@
 	var currentPoints = [];
 	var firstRandomEdge = [];
 	var currentCenter = 0;
+	var currentRay = 0;
+	var currentlyFoundPoint = 0;
 	
 	function redrawAllPoints(){
 		let canvas = document.getElementById('myCanvas');
@@ -58,10 +60,11 @@
 		let p1 = currentPoints[0];
 		let p2 = currentPoints[1];
 		let x = 0;
-		function moveCircle(p){
+		function moveCircle(p, pointsSet){
 			advanceCenter();
 			let radius = calculateDistance(p, currentCenter);
-			if (radius >= calculateDistance(currentPoints[0], currentPoints[1])/2){
+			currentRay = radius;
+			if ((radius >= calculateDistance(currentPoints[0], currentPoints[1])/2) || (checkPointOnBoundary(pointsSet))){
 				clearInterval(x);
 			}
 			var c = document.getElementById("myCanvas");
@@ -78,8 +81,7 @@
 			currentCenter = p1;
 			drawBlueCircle(p2);
 			//drawRedCircle(p1);
-			x = setInterval(moveCircle, 1000, p1);
-			console.log("hello");
+			x = setInterval(moveCircle, 100, p1, bluePoints);
 			//moveCircle(p1);
 		} else {
 			currentCenter = p2;
@@ -90,10 +92,18 @@
 	}
 	
 	
-	function stopLineSearch(){
-		
+	function checkPointOnBoundary(pointsSet){
+		let xc = currentCenter.x;
+		let yc = currentCenter.y;
+		for (let i=0; i<pointsSet.length; i++){
+			let distanceToPoint = calculateDistance(currentCenter, pointsSet[i]);
+			if (distanceToPoint <= currentRay){
+			currentlyFoundPoint = pointsSet[i];
+				return true;
+			}
+		}
+		return false;
 	}
-	
 	
 	function drawRedCircle(p){
 		let current = advanceCenter(p);
