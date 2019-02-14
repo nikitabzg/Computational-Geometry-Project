@@ -57,37 +57,36 @@
 	function drawFirstCircles(){
 		let p1 = currentPoints[0];
 		let p2 = currentPoints[1];
+		let x = 0;
+		function moveCircle(p){
+			advanceCenter();
+			let radius = calculateDistance(p, currentCenter);
+			if (radius >= calculateDistance(currentPoints[0], currentPoints[1])/2){
+				clearInterval(x);
+			}
+			var c = document.getElementById("myCanvas");
+			var ctx = c.getContext("2d");
+			ctx.clearRect(0, 0, c.width, c.height);
+			redrawAllPoints();
+			redrawAllCurrentEdges();
+			ctx.beginPath();
+			ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, radius, 0, 2*Math.PI);
+			ctx.closePath();
+			ctx.stroke();
+		};
 		if (p1.colour == "red"){
 			currentCenter = p1;
 			drawBlueCircle(p2);
 			//drawRedCircle(p1);
-			var x = setInterval(moveCircle, 1000, p1);
+			x = setInterval(moveCircle, 1000, p1);
+			console.log("hello");
 			//moveCircle(p1);
-			if (calculateDistance(firstRandomEdge[0], firstRandomEdge[1])/2 <= calculateDistance(p1, currentCenter)){
-				clearInterval(x);
-			}
 		} else {
 			currentCenter = p2;
 			drawBlueCircle(p1);
 			//drawRedCircle(p2);
 			moveCircle(p2);
 		}
-	}
-	
-	function moveCircle(p){
-		advanceCenter();
-		console.log(currentCenter);
-		let radius = calculateDistance(p, currentCenter);
-		var c = document.getElementById("myCanvas");
-		var ctx = c.getContext("2d");
-		ctx.clearRect(0, 0, c.width, c.height);
-		redrawAllPoints();
-		redrawAllCurrentEdges();
-		ctx.beginPath();
-		ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, radius, 0, 2*Math.PI);
-		ctx.closePath();
-		ctx.stroke();
-		//setInterval(moveCircle, 1000, p);
 	}
 	
 	
