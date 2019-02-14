@@ -21,6 +21,28 @@
 	var rect = 0;
 	var edges = [];
 	var currentPoints = [];
+	var firstRandomEdge = [];
+	var currentCenter = 0;
+	
+	function redrawAllPoints(){
+		let canvas = document.getElementById('myCanvas');
+		let ctx = canvas.getContext('2d');
+		rect = canvas.getBoundingClientRect();
+		for (var i=0; i<points.length; i++){
+			var point = points[i];
+			ctx.beginPath();
+			ctx.arc(point.x - rect.left, point.y - rect.top, 4, 0, 2*Math.PI);
+			ctx.fillStyle = point.colour;
+			ctx.fill();
+		}
+	}
+	
+	function redrawAllCurrentEdges(){
+		for (var i=0; i<edges.length; i++){
+			var edge = edges[i];
+			drawLine(edge[0], edge[1]);
+		}
+	}
 	
 	function drawPoint(point){
 		let canvas = document.getElementById('myCanvas');
@@ -36,27 +58,54 @@
 		let p1 = currentPoints[0];
 		let p2 = currentPoints[1];
 		if (p1.colour == "red"){
+			currentCenter = p1;
 			drawBlueCircle(p2);
-			drawRedCircle(p1);
+			//drawRedCircle(p1);
+			var x = setInterval(moveCircle, 1000, p1);
+			//moveCircle(p1);
+			if (calculateDistance(firstRandomEdge[0], firstRandomEdge[1])/2 <= calculateDistance(p1, currentCenter)){
+				clearInterval(x);
+			}
 		} else {
+			currentCenter = p2;
 			drawBlueCircle(p1);
-			drawRedCircle(p2);
+			//drawRedCircle(p2);
+			moveCircle(p2);
 		}
 	}
+	
+	function moveCircle(p){
+		advanceCenter();
+		console.log(currentCenter);
+		let radius = calculateDistance(p, currentCenter);
+		var c = document.getElementById("myCanvas");
+		var ctx = c.getContext("2d");
+		ctx.clearRect(0, 0, c.width, c.height);
+		redrawAllPoints();
+		redrawAllCurrentEdges();
+		ctx.beginPath();
+		ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, radius, 0, 2*Math.PI);
+		ctx.closePath();
+		ctx.stroke();
+		//setInterval(moveCircle, 1000, p);
+	}
+	
+	
+	function stopLineSearch(){
+		
+	}
+	
 	
 	function drawRedCircle(p){
 		let current = advanceCenter(p);
 		let radius = calculateDistance(current, p);
-		console.log(current);
-		console.log(current.x);
-		console.log(current.y);
 		var c = document.getElementById("myCanvas");
 		var ctx = c.getContext("2d");
 		ctx.beginPath();
 		ctx.arc(current.x-rect.left, current.y-rect.top, radius, 0, 2*Math.PI);
-		//ctx.arc(100, 75, 50, 0, 2 * Math.PI);
 		ctx.stroke();
 	}
+	
 	
 	function drawBlueCircle(edge, p){
 	}
@@ -86,10 +135,9 @@
 		return m;
 	}
 	
-	function advanceCenter(current){
+	function advanceCenter(){
 		let p1 = currentPoints[0];
 		let p2 = currentPoints[1];
-		
 		let m = calculateM();
 		if (m<0){
 			m = -m;
@@ -101,17 +149,16 @@
 		let xc = 0;
 		let yc = 0;
 		if (p1.x < p2.x){
-			xc = current.x + 1;
+			xc = currentCenter.x + 1;
 		} else {
-			xc = current.x - 1;
+			xc = currentCenter.x - 1;
 		}
 		if (p1.y < p2.y){
-			yc = current.y + m;
+			yc = currentCenter.y + m;
 		} else {
-			yc = current.y - m;
+			yc = currentCenter.y - m;
 		}
-		let newCenter = new Point(xc, yc, "black");
-		return newCenter;
+		currentCenter = new Point(xc, yc, "black");
 	}
 	
 	function drawLine(p1, p2){
@@ -163,18 +210,21 @@
 				if (redPoints.length >= 1){
 					p1 = Math.floor(Math.random()*redPoints.length);
 					currentPoints[0] = redPoints[p1];
+					firstRandomEdge[0] = redPoints[p1];
 				} else {
 					// TODO error gestion
 				}
 				if (bluePoints.length >= 1){
 					p2 = Math.floor(Math.random()*bluePoints.length);
 					currentPoints[1] = bluePoints[p2];
+					firstRandomEdge[1] = bluePoints[p2];
 				} else {
 					// TODO error gestion
 				}
 				document.getElementById("saveB").disabled=true;
 				document.getElementById("colour").disabled=true;
 				canvas.removeEventListener('click',createPoint);
+				edges[0] = [p1, p2];
 				drawLine(p1, p2);
 			});
 			
