@@ -61,26 +61,13 @@
 		let p2 = currentPoints[1];
 		let x = 0;
 		function moveCircle(p, pointsSet){
-			//console.log("recursive call");
 			advanceCenter();
 			let radius = calculateDistance(p, currentCenter);
-			//console.log("radius : "+radius);
 			currentRay = radius;
 			if ((checkPointOnBoundary(pointsSet))){
-				//console.log("entered first if !!!!");
 				p = currentlyFoundPoint;
 				pointsSet = redPoints;
-				//currentCenter = currentlyFoundPoint;
 				if (i >= 2){
-					if (currentRay >= calculateDistance(currentPoints[0], currentPoints[1])/2){
-						//console.log("Ray big enough");
-						//console.log(currentRay);
-					} else if ((checkPointOnBoundary(pointsSet))){
-						//console.log("Point on boundary");
-					} else {
-						///console.log("error");
-					}
-					//console.log("i==2 ok");
 					return;
 				}
 				drawNextCircle();
@@ -88,14 +75,14 @@
 			}
 			var c = document.getElementById("myCanvas");
 			var ctx = c.getContext("2d");
-			//ctx.clearRect(0, 0, c.width, c.height);
+			ctx.clearRect(0, 0, c.width, c.height);
 			redrawAllPoints();
 			redrawAllCurrentEdges();
 			ctx.beginPath();
 			ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, currentRay, 0, 2*Math.PI);
-			//ctx.closePath();
+			ctx.closePath();
 			ctx.stroke();
-			moveCircle(p, pointsSet);
+			setTimeout(moveCircle, 100, p, pointsSet);
 		};
 		if (p1.colour == "red"){
 			currentCenter = p1;
@@ -115,7 +102,7 @@
 		var c = document.getElementById("myCanvas");
 		var ctx = c.getContext("2d");
 		edges[1] = [currentlyFoundPoint, currentCenter];
-		currentPoints[0] = currentlyFoundPoint; //PROBLEM HERE
+		currentPoints[0] = currentlyFoundPoint; 
 		currentPoints[1] = currentCenter;
 		currentRay = 1;
 		ctx.clearRect(0, 0, c.width, c.height);
@@ -139,12 +126,8 @@
 		ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, currentRay, 0, 2*Math.PI);
 		ctx.closePath();
 		ctx.stroke();
-		//console.log("in subFunction : currentRay = "+currentRay);
 		let x = calculateDistance(currentPoints[0], currentPoints[1]);
 		drawSimpleLine(currentPoints[0], currentPoints[1]);
-		//p = currentlyFoundPoint;
-		//pointsSet = bluePoints;
-		//i++;
 	}
 	
 	function checkPointOnBoundary(pointsSet){
