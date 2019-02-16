@@ -68,6 +68,12 @@
 				p = currentlyFoundPoint;
 				pointsSet = redPoints;
 				if (i >= 2){
+					edges = [[currentlyFoundPoint, currentPoints[0]]];
+					var c = document.getElementById("myCanvas");
+					var ctx = c.getContext("2d");
+					ctx.clearRect(0, 0, c.width, c.height);
+					redrawAllPoints();
+					redrawAllCurrentEdges();
 					return;
 				}
 				drawNextCircle();
@@ -86,15 +92,10 @@
 		};
 		if (p1.colour == "red"){
 			currentCenter = p1;
-			drawBlueCircle(p2);
-			//drawRedCircle(p1);
-			//x = setInterval(moveCircle, 100, p1, bluePoints);
 			moveCircle(p1, bluePoints);
 		} else {
 			currentCenter = p2;
-			drawBlueCircle(p1);
-			//drawRedCircle(p2);
-			moveCircle(p2);
+			moveCircle(p2, bluePoints);
 		}
 	}
 	
@@ -105,28 +106,11 @@
 		currentPoints[0] = currentlyFoundPoint; 
 		currentPoints[1] = currentCenter;
 		currentRay = 1;
-		ctx.clearRect(0, 0, c.width, c.height);
-		ctx.beginPath();
-		ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, 8, 0, 2*Math.PI);
-		ctx.closePath();
-		ctx.fillStyle = "green";
-		ctx.fill();
-		ctx.beginPath();
-		ctx.arc(currentlyFoundPoint.x-rect.left, currentlyFoundPoint.y-rect.top, 8, 0, 2*Math.PI);
-		ctx.closePath();
-		ctx.fillStyle = "yellow";
-		ctx.fill();
 		currentCenter = currentlyFoundPoint;
-		ctx.beginPath();
-		ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, 16, 0, 2*Math.PI);
-		ctx.closePath();
-		ctx.fillStyle = "pink";
-		ctx.fill();
 		ctx.beginPath();
 		ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, currentRay, 0, 2*Math.PI);
 		ctx.closePath();
 		ctx.stroke();
-		let x = calculateDistance(currentPoints[0], currentPoints[1]);
 		drawSimpleLine(currentPoints[0], currentPoints[1]);
 	}
 	
@@ -145,13 +129,11 @@
 	}
 	
 	function drawRedCircle(p){
-		let current = advanceCenter(p);
-		let radius = calculateDistance(current, p);
 		var c = document.getElementById("myCanvas");
 		var ctx = c.getContext("2d");
 		ctx.beginPath();
-		ctx.arc(current.x-rect.left, current.y-rect.top, radius, 0, 2*Math.PI);
-		//ctx.closePath();
+		ctx.arc(currentPoints[0].x-rect.left, current.y-rect.top, radius, 0, 2*Math.PI);
+		ctx.closePath();
 		ctx.stroke();
 	}
 	
