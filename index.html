@@ -61,26 +61,26 @@
 		let p2 = currentPoints[1];
 		let x = 0;
 		function moveCircle(p, pointsSet){
-			console.log("recursive call");
+			//console.log("recursive call");
 			advanceCenter();
 			let radius = calculateDistance(p, currentCenter);
-			console.log("radius : "+radius);
+			//console.log("radius : "+radius);
 			currentRay = radius;
-			if ((currentRay >= calculateDistance(currentPoints[0], currentPoints[1])/2) || (checkPointOnBoundary(pointsSet))){
-				console.log("entered first if !!!!");
+			if ((checkPointOnBoundary(pointsSet))){
+				//console.log("entered first if !!!!");
 				p = currentlyFoundPoint;
 				pointsSet = redPoints;
 				//currentCenter = currentlyFoundPoint;
 				if (i >= 2){
 					if (currentRay >= calculateDistance(currentPoints[0], currentPoints[1])/2){
-						console.log("Ray big enough");
-						console.log(currentRay);
+						//console.log("Ray big enough");
+						//console.log(currentRay);
 					} else if ((checkPointOnBoundary(pointsSet))){
-						console.log("Point on boundary");
+						//console.log("Point on boundary");
 					} else {
-						console.log("error");
+						///console.log("error");
 					}
-					console.log("i==2 ok");
+					//console.log("i==2 ok");
 					return;
 				}
 				drawNextCircle();
@@ -139,7 +139,7 @@
 		ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, currentRay, 0, 2*Math.PI);
 		ctx.closePath();
 		ctx.stroke();
-		console.log("in subFunction : currentRay = "+currentRay);
+		//console.log("in subFunction : currentRay = "+currentRay);
 		let x = calculateDistance(currentPoints[0], currentPoints[1]);
 		drawSimpleLine(currentPoints[0], currentPoints[1]);
 		//p = currentlyFoundPoint;
@@ -238,9 +238,6 @@
 	}
 	
 	function drawSimpleLine(p1, p2){
-		//console.log("drawSimpelLine");
-		//console.log(p1);
-		//console.log(p2);
 		let canvas = document.getElementById('myCanvas');
 		let ctx = canvas.getContext("2d");
 		ctx.beginPath();
