@@ -106,6 +106,16 @@
 		currentPoints[0] = currentlyFoundPoint; 
 		currentPoints[1] = currentCenter;
 		currentRay = 1;
+		ctx.beginPath();
+		ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, 8, 0, 2*Math.PI);
+		ctx.closePath();
+		ctx.fillStyle = "green";
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(currentlyFoundPoint.x-rect.left, currentlyFoundPoint.y-rect.top, 8, 0, 2*Math.PI);
+		ctx.closePath();
+		ctx.fillStyle = "yellow";
+		ctx.fill();
 		currentCenter = currentlyFoundPoint;
 		ctx.beginPath();
 		ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, currentRay, 0, 2*Math.PI);
