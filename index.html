@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -25,6 +24,7 @@
 	var currentCenter = 0;
 	var currentRay = 0;
 	var currentlyFoundPoint = 0;
+	var i = 1;
 	
 	function redrawAllPoints(){
 		let canvas = document.getElementById('myCanvas');
@@ -42,7 +42,7 @@
 	function redrawAllCurrentEdges(){
 		for (var i=0; i<edges.length; i++){
 			var edge = edges[i];
-			drawLine(edge[0], edge[1]);
+			drawSimpleLine(edge[0], edge[1]);
 		}
 	}
 	
@@ -61,28 +61,48 @@
 		let p2 = currentPoints[1];
 		let x = 0;
 		function moveCircle(p, pointsSet){
+			console.log("recursive call");
 			advanceCenter();
 			let radius = calculateDistance(p, currentCenter);
+			console.log("radius : "+radius);
 			currentRay = radius;
-			if ((radius >= calculateDistance(currentPoints[0], currentPoints[1])/2) || (checkPointOnBoundary(pointsSet))){
-				clearInterval(x);
+			if ((currentRay >= calculateDistance(currentPoints[0], currentPoints[1])/2) || (checkPointOnBoundary(pointsSet))){
+				console.log("entered first if !!!!");
+				p = currentlyFoundPoint;
+				pointsSet = redPoints;
+				//currentCenter = currentlyFoundPoint;
+				if (i >= 2){
+					if (currentRay >= calculateDistance(currentPoints[0], currentPoints[1])/2){
+						console.log("Ray big enough");
+						console.log(currentRay);
+					} else if ((checkPointOnBoundary(pointsSet))){
+						console.log("Point on boundary");
+					} else {
+						console.log("error");
+					}
+					console.log("i==2 ok");
+					return;
+				}
+				drawNextCircle();
+				i++;
 			}
 			var c = document.getElementById("myCanvas");
 			var ctx = c.getContext("2d");
-			ctx.clearRect(0, 0, c.width, c.height);
+			//ctx.clearRect(0, 0, c.width, c.height);
 			redrawAllPoints();
 			redrawAllCurrentEdges();
 			ctx.beginPath();
-			ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, radius, 0, 2*Math.PI);
-			ctx.closePath();
+			ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, currentRay, 0, 2*Math.PI);
+			//ctx.closePath();
 			ctx.stroke();
+			moveCircle(p, pointsSet);
 		};
 		if (p1.colour == "red"){
 			currentCenter = p1;
 			drawBlueCircle(p2);
 			//drawRedCircle(p1);
-			x = setInterval(moveCircle, 100, p1, bluePoints);
-			//moveCircle(p1);
+			//x = setInterval(moveCircle, 100, p1, bluePoints);
+			moveCircle(p1, bluePoints);
 		} else {
 			currentCenter = p2;
 			drawBlueCircle(p1);
@@ -91,6 +111,41 @@
 		}
 	}
 	
+	function drawNextCircle(){
+		var c = document.getElementById("myCanvas");
+		var ctx = c.getContext("2d");
+		edges[1] = [currentlyFoundPoint, currentCenter];
+		currentPoints[0] = currentlyFoundPoint; //PROBLEM HERE
+		currentPoints[1] = currentCenter;
+		currentRay = 1;
+		ctx.clearRect(0, 0, c.width, c.height);
+		ctx.beginPath();
+		ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, 8, 0, 2*Math.PI);
+		ctx.closePath();
+		ctx.fillStyle = "green";
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(currentlyFoundPoint.x-rect.left, currentlyFoundPoint.y-rect.top, 8, 0, 2*Math.PI);
+		ctx.closePath();
+		ctx.fillStyle = "yellow";
+		ctx.fill();
+		currentCenter = currentlyFoundPoint;
+		ctx.beginPath();
+		ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, 16, 0, 2*Math.PI);
+		ctx.closePath();
+		ctx.fillStyle = "pink";
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(currentCenter.x-rect.left, currentCenter.y-rect.top, currentRay, 0, 2*Math.PI);
+		ctx.closePath();
+		ctx.stroke();
+		console.log("in subFunction : currentRay = "+currentRay);
+		let x = calculateDistance(currentPoints[0], currentPoints[1]);
+		drawSimpleLine(currentPoints[0], currentPoints[1]);
+		//p = currentlyFoundPoint;
+		//pointsSet = bluePoints;
+		//i++;
+	}
 	
 	function checkPointOnBoundary(pointsSet){
 		let xc = currentCenter.x;
@@ -102,6 +157,7 @@
 				return true;
 			}
 		}
+		currentlyFoundPoint = currentPoints[1];
 		return false;
 	}
 	
@@ -112,6 +168,7 @@
 		var ctx = c.getContext("2d");
 		ctx.beginPath();
 		ctx.arc(current.x-rect.left, current.y-rect.top, radius, 0, 2*Math.PI);
+		//ctx.closePath();
 		ctx.stroke();
 	}
 	
@@ -176,7 +233,20 @@
 		ctx.beginPath();
 		ctx.moveTo(redPoints[p1].x - rect.left, redPoints[p1].y - rect.top);
 		ctx.lineTo(bluePoints[p2].x - rect.left, bluePoints[p2].y - rect.top);				
-				
+		//ctx.closePath();	
+		ctx.stroke();
+	}
+	
+	function drawSimpleLine(p1, p2){
+		//console.log("drawSimpelLine");
+		//console.log(p1);
+		//console.log(p2);
+		let canvas = document.getElementById('myCanvas');
+		let ctx = canvas.getContext("2d");
+		ctx.beginPath();
+		ctx.moveTo(p1.x - rect.left, p1.y - rect.top);
+		ctx.lineTo(p2.x - rect.left, p2.y - rect.top);
+		//ctx.closePath();
 		ctx.stroke();
 	}
 	
@@ -233,8 +303,8 @@
 				document.getElementById("saveB").disabled=true;
 				document.getElementById("colour").disabled=true;
 				canvas.removeEventListener('click',createPoint);
-				edges[0] = [p1, p2];
-				drawLine(p1, p2);
+				edges[0] = [redPoints[p1], bluePoints[p2]];
+				drawSimpleLine(redPoints[p1], bluePoints[p2]);
 			});
 			
 		let circleButton = document.getElementById("circleB");
