@@ -11,14 +11,24 @@
 			this.colour = colour;
 		}
 	}
+	
+	class Edge {
+		constructor(p1, p2) {
+			this.p1 = p1;
+			this.p2 = p2;
+		}
+	}
 		
 	var points = [];
+	var relevantPoints = [];
+	var triangles = [];
 	var redPoints = [];
 	var bluePoints = [];
 	var isColourRed = true;
 	var pointColour = "red";
 	var rect = 0;
 	var edges = [];
+	var relevantEdges = [];
 	var currentPoints = [];
 	var firstRandomEdge = [];
 	var currentCenter = 0;
@@ -43,6 +53,10 @@
 		for (var i=0; i<edges.length; i++){
 			var edge = edges[i];
 			drawSimpleLine(edge[0], edge[1]);
+		}
+		for (var i=0; i<relevantEdges.length; i++){
+			var edge = relevantEdges[i];
+			drawSimpleLine(edge.p1, edge.p2);
 		}
 	}
 	
@@ -69,11 +83,23 @@
 				pointsSet = redPoints;
 				if (i >= 2){
 					edges = [[currentlyFoundPoint, currentPoints[0]]];
+					if (!relevantPoints.includes(currentlyFoundPoint)){
+						relevantPoints.push(currentlyFoundPoint);
+					}
+					if (!relevantPoints.includes(currentPoints[0])){
+						relevantPoints.push(currentPoints[0]);
+					}
+					let e = new Edge(currentlyFoundPoint, currentPoints[0]);
+					if (!relevantEdges.includes(e)){
+						relevantEdges.push(e);
+					}
 					var c = document.getElementById("myCanvas");
 					var ctx = c.getContext("2d");
 					ctx.clearRect(0, 0, c.width, c.height);
 					redrawAllPoints();
 					redrawAllCurrentEdges();
+					i=1;
+					currentlyFoundPoint = 0;
 					return;
 				}
 				drawNextCircle();
@@ -236,8 +262,39 @@
 		drawPoint(p);
 	}
 	
+	function selectPoints(){
+		let canvas = document.getElementById('myCanvas');
+		let p1 = 0;
+		let p2 = 0;
+		while (true){
+			if (redPoints.length >= 1){
+				p1 = Math.floor(Math.random()*redPoints.length);
+				currentPoints[0] = redPoints[p1];
+				firstRandomEdge[0] = redPoints[p1];
+			} else {
+				// TODO error gestion
+			}
+			if (bluePoints.length >= 1){
+				p2 = Math.floor(Math.random()*bluePoints.length);
+				currentPoints[1] = bluePoints[p2];
+				firstRandomEdge[1] = bluePoints[p2];
+			} else {
+				// TODO error gestion
+			}
+			document.getElementById("saveB").disabled=true;
+			document.getElementById("colour").disabled=true;
+			canvas.removeEventListener('click',createPoint);
+			let e = new Edge(redPoints[p1], bluePoints[p2]);
+			if (!relevantEdges.includes(e)){
+				break;
+			}
+		}
+		edges[0] = [redPoints[p1], bluePoints[p2]];
+		drawSimpleLine(redPoints[p1], bluePoints[p2]);
+	}
 	
-	window.onload = function () {
+	
+		window.onload = function () {
 		let canvas = document.getElementById('myCanvas');
 		canvas.addEventListener('click',createPoint);
 	
@@ -258,31 +315,67 @@
 		saveButton.addEventListener("click", function() {
 				let p1 = 0;
 				let p2 = 0;
-				if (redPoints.length >= 1){
-					p1 = Math.floor(Math.random()*redPoints.length);
-					currentPoints[0] = redPoints[p1];
-					firstRandomEdge[0] = redPoints[p1];
-				} else {
-					// TODO error gestion
+				while (true){
+					if (redPoints.length >= 1){
+						p1 = Math.floor(Math.random()*redPoints.length);
+						currentPoints[0] = redPoints[p1];
+						firstRandomEdge[0] = redPoints[p1];
+					} else {
+						// TODO error gestion
+					}
+					if (bluePoints.length >= 1){
+						p2 = Math.floor(Math.random()*bluePoints.length);
+						currentPoints[1] = bluePoints[p2];
+						firstRandomEdge[1] = bluePoints[p2];
+					} else {
+						// TODO error gestion
+					}
+					let e = new Edge(redPoints[p1], bluePoints[p2]);
+					if (!relevantEdges.includes(e)){ //TODO Not correct
+						break;
+					}
 				}
-				if (bluePoints.length >= 1){
-					p2 = Math.floor(Math.random()*bluePoints.length);
-					currentPoints[1] = bluePoints[p2];
-					firstRandomEdge[1] = bluePoints[p2];
-				} else {
-					// TODO error gestion
-				}
+				
 				document.getElementById("saveB").disabled=true;
 				document.getElementById("colour").disabled=true;
 				canvas.removeEventListener('click',createPoint);
 				edges[0] = [redPoints[p1], bluePoints[p2]];
 				drawSimpleLine(redPoints[p1], bluePoints[p2]);
-			});
-			
+			});	
 		let circleButton = document.getElementById("circleB");
 		circleButton.addEventListener("click", function() {
 				drawFirstCircles();
-			})
+			});
+		let nextButton = document.getElementById("nextB")
+		nextButton.addEventListener("click", function() {
+				let p1 = 0;
+				let p2 = 0;
+				currentPoints = [];
+				while (true){
+					if (redPoints.length >= 1){
+						p1 = Math.floor(Math.random()*redPoints.length);
+						currentPoints[0] = redPoints[p1];
+						firstRandomEdge[0] = redPoints[p1];
+					} else {
+						// TODO error gestion
+					}
+					if (bluePoints.length >= 1){
+						p2 = Math.floor(Math.random()*bluePoints.length);
+						currentPoints[1] = bluePoints[p2];
+						firstRandomEdge[1] = bluePoints[p2];
+					} else {
+						// TODO error gestion
+					}
+					let e = new Edge(redPoints[p1], bluePoints[p2]);
+					if (!relevantEdges.includes(e)){
+						break;
+					}
+				}
+			
+				edges[0] = [redPoints[p1], bluePoints[p2]];
+				drawSimpleLine(redPoints[p1], bluePoints[p2]);
+				drawFirstCircles();
+			});	
 	}
 	
 
@@ -372,5 +465,6 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 <button id="colour">Blue</button>
 <button id="saveB">First line</button>
 <button id="circleB">Draw Circles</button>
+<button id="nextB">Next</button>
 </body>
 </html>
