@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<script language="javascript" type="text/javascript">
-
+	
 	class Point {
 		constructor(x, y, colour) {
 			this.x = x;
@@ -20,6 +20,7 @@
 	}
 		
 	var points = [];
+	var extendedPoints = [];
 	var relevantPoints = [];
 	var triangles = [];
 	var redPoints = [];
@@ -28,6 +29,7 @@
 	var pointColour = "red";
 	var rect = 0;
 	var edges = [];
+	var extendedEdges = [];
 	var relevantEdges = [];
 	var currentPoints = [];
 	var firstRandomEdge = [];
@@ -49,6 +51,19 @@
 		}
 	}
 	
+	function redrawAllPointsCanvas2(){
+		let canvas = document.getElementById('myCanvas2');
+		let ctx = canvas.getContext('2d');
+		//rect = canvas.getBoundingClientRect();
+		for (var i=0; i<points.length; i++){
+			var point = points[i];
+			ctx.beginPath();
+			ctx.arc(point.x, point.y, 4, 0, 2*Math.PI);
+			ctx.fillStyle = point.colour;
+			ctx.fill();
+		}
+	}
+	
 	function redrawAllCurrentEdges(){
 		for (var i=0; i<edges.length; i++){
 			var edge = edges[i];
@@ -57,6 +72,45 @@
 		for (var i=0; i<relevantEdges.length; i++){
 			var edge = relevantEdges[i];
 			drawSimpleLine(edge.p1, edge.p2);
+		}
+		for (var i=0; i<extendedEdges.length; i++){
+			var edge = extendedEdges[i];
+			drawSimpleLine(edge.p1, edge.p2);
+		}
+	}
+	
+	function redrawAllCurrentEdgesCanvas2(){
+		for (var i=0; i<edges.length; i++){
+			var edge = edges[i];
+			drawLineCanvas2(edge[0], edge[1]);
+		}
+		for (var i=0; i<relevantEdges.length; i++){
+			var edge = relevantEdges[i];
+			drawLineCanvas2(edge.p1, edge.p2);
+		}
+		for (var i=0; i<extendedEdges.length; i++){
+			var edge = extendedEdges[i];
+			drawLineCanvas2(edge.p1, edge.p2);
+		}
+	}
+	
+	function drawLineCanvas2(p1, p2){
+		let canvas = document.getElementById('myCanvas2');
+		let ctx = canvas.getContext("2d");
+		ctx.beginPath();
+		ctx.moveTo(p1.x, p1.y);
+		ctx.lineTo(p2.x, p2.y);
+		ctx.closePath();
+		ctx.stroke();
+	}
+	
+	function changePoints(){
+		let canvas = document.getElementById('myCanvas');
+		let ctx = canvas.getContext('2d');
+		rect = canvas.getBoundingClientRect();
+		for (let i=0; i<points.length; i++){
+			points[i].x = points[i].x - rect.left + 700;
+			points[i].y = points[i].y - rect.top + 400;
 		}
 	}
 	
@@ -68,6 +122,46 @@
 		ctx.arc(point.x - rect.left, point.y - rect.top, 4, 0, 2*Math.PI);
 		ctx.fillStyle = pointColour;
 		ctx.fill();
+	}
+	
+	function drawPointCanvas2(point){
+		let canvas = document.getElementById('myCanvas2');
+		let ctx = canvas.getContext('2d');
+		rect = canvas.getBoundingClientRect();
+		ctx.beginPath();
+		if (point.colour == 'black'){
+			ctx.arc(point.x, point.y, 4, 0, 2*Math.PI);
+		} else {
+			ctx.arc(point.x, point.y, 4, 0, 2*Math.PI);
+		}
+		
+		ctx.fillStyle = point.colour;
+		ctx.fill();
+	}
+	
+	function createPointsAtInfinity(){
+		let canvas2 = document.getElementById('myCanvas2');
+		let ctx2 = canvas2.getContext('2d');
+		let rect2 = canvas2.getBoundingClientRect();
+		let p1 = new Point(1000, 0, "black");
+		let p2 = new Point(0, 1000, "black");
+		let p3 = new Point(2000, 1000, "black");
+		for (let i=0; i<points.length; i++){
+			extendedPoints.push(points[i]);
+		}
+		extendedPoints.push(p1);
+		extendedPoints.push(p2);
+		extendedPoints.push(p3);
+		extendedEdges.push(new Edge(p1, p2));
+		extendedEdges.push(new Edge(p2, p3));
+		extendedEdges.push(new Edge(p1, p3));
+		
+		drawPointCanvas2(p1);
+		drawPointCanvas2(p2);
+		drawPointCanvas2(p3);
+		drawLineCanvas2(extendedEdges[0].p1, extendedEdges[0].p2);
+		drawLineCanvas2(extendedEdges[1].p1, extendedEdges[1].p2);
+		drawLineCanvas2(extendedEdges[2].p1, extendedEdges[2].p2);
 	}
 	
 	function drawFirstCircles(){
@@ -234,7 +328,7 @@
 		ctx.beginPath();
 		ctx.moveTo(redPoints[p1].x - rect.left, redPoints[p1].y - rect.top);
 		ctx.lineTo(bluePoints[p2].x - rect.left, bluePoints[p2].y - rect.top);				
-		//ctx.closePath();	
+		ctx.closePath();	
 		ctx.stroke();
 	}
 	
@@ -262,36 +356,6 @@
 		drawPoint(p);
 	}
 	
-	function selectPoints(){
-		let canvas = document.getElementById('myCanvas');
-		let p1 = 0;
-		let p2 = 0;
-		while (true){
-			if (redPoints.length >= 1){
-				p1 = Math.floor(Math.random()*redPoints.length);
-				currentPoints[0] = redPoints[p1];
-				firstRandomEdge[0] = redPoints[p1];
-			} else {
-				// TODO error gestion
-			}
-			if (bluePoints.length >= 1){
-				p2 = Math.floor(Math.random()*bluePoints.length);
-				currentPoints[1] = bluePoints[p2];
-				firstRandomEdge[1] = bluePoints[p2];
-			} else {
-				// TODO error gestion
-			}
-			document.getElementById("saveB").disabled=true;
-			document.getElementById("colour").disabled=true;
-			canvas.removeEventListener('click',createPoint);
-			let e = new Edge(redPoints[p1], bluePoints[p2]);
-			if (!relevantEdges.includes(e)){
-				break;
-			}
-		}
-		edges[0] = [redPoints[p1], bluePoints[p2]];
-		drawSimpleLine(redPoints[p1], bluePoints[p2]);
-	}
 	
 	
 		window.onload = function () {
@@ -348,33 +412,33 @@
 			});
 		let nextButton = document.getElementById("nextB")
 		nextButton.addEventListener("click", function() {
-				let p1 = 0;
-				let p2 = 0;
-				currentPoints = [];
-				while (true){
-					if (redPoints.length >= 1){
-						p1 = Math.floor(Math.random()*redPoints.length);
-						currentPoints[0] = redPoints[p1];
-						firstRandomEdge[0] = redPoints[p1];
-					} else {
-						// TODO error gestion
-					}
-					if (bluePoints.length >= 1){
-						p2 = Math.floor(Math.random()*bluePoints.length);
-						currentPoints[1] = bluePoints[p2];
-						firstRandomEdge[1] = bluePoints[p2];
-					} else {
-						// TODO error gestion
-					}
-					let e = new Edge(redPoints[p1], bluePoints[p2]);
-					if (!relevantEdges.includes(e)){
-						break;
-					}
-				}
-			
-				edges[0] = [redPoints[p1], bluePoints[p2]];
-				drawSimpleLine(redPoints[p1], bluePoints[p2]);
-				drawFirstCircles();
+				createPointsAtInfinity();
+				changePoints();
+				redrawAllPointsCanvas2();
+				redrawAllCurrentEdgesCanvas2();
+				/*
+				let canvas0 = document.getElementById('myCanvas0');
+				let ctx0 = canvas0.getContext('2d');
+				let rect0 = canvas0.getBoundingClientRect();
+				ctx0.beginPath();
+				ctx0.arc(10, 320, 10, 0, 2*Math.PI);
+				ctx0.fillStyle = pointColour;
+				ctx0.fill();
+				*/
+		/*
+				
+				console.log(extendedEdges);
+				//drawSimpleLine(extendedEdges[0].p1, extendedEdges[0].p2);
+				var c = document.getElementById("myCanvas");
+				var ctx = c.getContext("2d");
+				ctx.beginPath();
+				ctx.moveTo(extendedEdges[0].p1.x - rect.left, extendedEdges[0].p1.y - rect.top);
+				ctx.lineTo(extendedEdges[0].p2.x - rect.left, extendedEdges[0].p2.y - rect.top);
+				ctx.closePath();
+				ctx.stroke();
+				//drawSimpleLine(extendedEdges[1].p1, extendedEdges[1].p2);
+				//drawSimpleLine(extendedEdges[2].p1, extendedEdges[2].p2);
+		*/
 			});	
 	}
 	
@@ -466,5 +530,11 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 <button id="saveB">First line</button>
 <button id="circleB">Draw Circles</button>
 <button id="nextB">Next</button>
+
+<canvas id="myCanvas2" width="2000" height="1000" style="border:1px solid #d3d3d3;">
+Your browser does not support the HTML5 canvas tag.</canvas>
+
 </body>
 </html>
+
+
