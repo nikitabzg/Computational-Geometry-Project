@@ -37,6 +37,14 @@
 	var currentRay = 0;
 	var currentlyFoundPoint = 0;
 	var i = 1;
+	var ki = 0;
+	var k = 0;
+	var initialPoint = 0;
+	
+	
+	function calculateK(){
+		k = Math.pow(2, Math.pow(2,i));
+	}
 	
 	function redrawAllPoints(){
 		let canvas = document.getElementById('myCanvas');
@@ -51,7 +59,7 @@
 		}
 	}
 	
-	function redrawAllPointsCanvas2(){
+	function redrawAllPointsCanvas2Beginning(){
 		let canvas = document.getElementById('myCanvas2');
 		let ctx = canvas.getContext('2d');
 		//rect = canvas.getBoundingClientRect();
@@ -62,6 +70,36 @@
 			ctx.fillStyle = point.colour;
 			ctx.fill();
 		}
+	}
+	
+	
+	function redrawAllPointsCanvas2Next(){
+		let canvas = document.getElementById('myCanvas2');
+		let ctx = canvas.getContext('2d');
+		//rect = canvas.getBoundingClientRect();
+		for (var i=0; i<points.length; i++){
+			var point = points[i];
+			ctx.beginPath();
+			ctx.arc(point.x, point.y, 4, 0, 2*Math.PI);
+			ctx.fillStyle = point.colour;
+			ctx.fill();
+		}
+		ctx.beginPath();
+		ctx.arc(currentCenter.x, currentCenter.y, 4, 0, 2*Math.PI);
+		ctx.fillStyle = currentCenter.colour;
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(extendedPoints[extendedPoints.length-1].x, extendedPoints[extendedPoints.length-1].y, 4, 0, 2*Math.PI);
+		ctx.fillStyle = extendedPoints[extendedPoints.length-1].colour;
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(extendedPoints[extendedPoints.length-2].x, extendedPoints[extendedPoints.length-2].y, 4, 0, 2*Math.PI);
+		ctx.fillStyle = extendedPoints[extendedPoints.length-2].colour;
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(extendedPoints[extendedPoints.length-3].x, extendedPoints[extendedPoints.length-3].y, 4, 0, 2*Math.PI);
+		ctx.fillStyle = extendedPoints[extendedPoints.length-3].colour;
+		ctx.fill();
 	}
 	
 	function redrawAllCurrentEdges(){
@@ -143,9 +181,9 @@
 		let canvas2 = document.getElementById('myCanvas2');
 		let ctx2 = canvas2.getContext('2d');
 		let rect2 = canvas2.getBoundingClientRect();
-		let p1 = new Point(1000, 0, "black");
-		let p2 = new Point(0, 1000, "black");
-		let p3 = new Point(2000, 1000, "black");
+		let p1 = new Point(1000, 0, 'black');
+		let p2 = new Point(0, 1000, 'black');
+		let p3 = new Point(2000, 1000, 'black');
 		for (let i=0; i<points.length; i++){
 			extendedPoints.push(points[i]);
 		}
@@ -163,6 +201,22 @@
 		drawLineCanvas2(extendedEdges[1].p1, extendedEdges[1].p2);
 		drawLineCanvas2(extendedEdges[2].p1, extendedEdges[2].p2);
 	}
+	
+	function checkDelaunayTriangle(p1, p2, p3){
+		let yDelta1 = p2.y - p1.y;
+		let xDelta1 = p2.x - p1.x;
+		let yDelta2 = p3.y - p2.y;
+		let xDelta2 = p3.x - p2.x;
+		
+		let center = new Point(0,0,'black');
+		
+		let slope1 = yDelta1/xDelta1;
+		let slope2 = yDelta2/xDelta2;
+		
+		center.x = (slope1*slope2*(p1.y-p3.y) + slope2*(p1.x+p2.x) - slope1*(p2.x+p3.x))/(2*(slope2-slope1));
+		center.y = -1*(center.x - (p1.x+p2.x)/2)/slope1 + (p1.y+p2.y)/2;
+		return center;
+	}	
 	
 	function drawFirstCircles(){
 		let p1 = currentPoints[0];
@@ -258,6 +312,19 @@
 		return false;
 	}
 	
+	function checkPointOnBoundaryGrowingRay(){
+		let xc = currentCenter.x;
+		let yc = currentCenter.y;
+		for (let i=0; i<points.length; i++){
+			let distanceToPoint = calculateDistance(currentCenter, points[i]);
+			if (distanceToPoint <= currentRay){
+			currentlyFoundPoint = pointsSet[i];
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	function drawRedCircle(p){
 		var c = document.getElementById("myCanvas");
 		var ctx = c.getContext("2d");
@@ -338,10 +405,28 @@
 		ctx.beginPath();
 		ctx.moveTo(p1.x - rect.left, p1.y - rect.top);
 		ctx.lineTo(p2.x - rect.left, p2.y - rect.top);
-		//ctx.closePath();
+		ctx.closePath();
 		ctx.stroke();
 	}
 	
+	function growCircle(center, p1, p2, p3){
+		let distance = calculateDistance(center, p1);
+		if (checkPointOnBoundaryGrowingRay() || currentRay >= distance){
+			return;
+		}
+		let canvas = document.getElementById('myCanvas2');
+		let ctx = canvas.getContext("2d");
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		redrawAllCurrentEdgesCanvas2();
+		redrawAllPointsCanvas2Next();
+		ctx.beginPath();
+		ctx.arc(center.x, center.y, currentRay, 0, 2*Math.PI);
+		ctx.closePath();
+		ctx.stroke();
+		i++;
+		currentRay++;
+		setTimeout(growCircle, 100, center, p1, p2, p3);
+	}
 	
 	function createPoint(evt){
 		let xCoord = evt.clientX;
@@ -357,6 +442,78 @@
 	}
 	
 	
+	function grahamScan(P){
+		setInitialPoint(P);
+		let sortedPoints = P.sort(radiallyCompare);
+		stack = [initialPoint, P[0]];
+		let i = 1;
+		while (i<P.length){
+			let last = stack.length - 1;
+			if (orientationDeterminant([stack[last-1],stack[last],points[i]]) < 0){
+				stack.push(P[i]);
+				i++;
+			} else {
+				stack.pop();
+			}
+		}
+		var c = document.getElementById("myCanvas");
+		var ctx = c.getContext("2d");
+		for (let i = 0; i<stack.length-1; i++){
+			ctx.beginPath();
+			ctx.moveTo(stack[i].x - rect.left, stack[i].y - rect.top);
+			ctx.lineTo(stack[i+1].x - rect.left, stack[i+1].y - rect.top);
+			ctx.closePath();
+			ctx.stroke();
+		}
+		ctx.beginPath();
+		ctx.moveTo(stack[stack.length-1].x - rect.left, stack[stack.length-1].y - rect.top);
+		ctx.lineTo(stack[0].x - rect.left, stack[0].y - rect.top);
+		ctx.closePath();
+		ctx.stroke();
+	}
+	
+	function radiallyCompare(a,b){
+		let orientation = orientationDeterminant([initialPoint, a, b]);
+		return orientation;
+	}
+	
+	function orientationDeterminant(pointsList){
+		let pointA = pointsList[0];
+		let pointB = pointsList[1];
+		let pointC = pointsList[2];
+		let result = pointB.x*pointC.y - pointA.x*pointC.y + pointA.x*pointB.y
+    - pointB.y*pointC.x + pointA.y*pointC.x - pointA.y*pointB.x;
+	
+		return result;
+	}
+		
+	function setInitialPoint(P){
+		let best = null;
+		for (i = 0; i < P.length; ++i){
+			if (best===null || P[i].x < best.x){
+				best = P[i];
+			}
+		}
+		initialPoint = best;
+		var index = P.indexOf(initialPoint);
+		P.splice(index,1);
+	}
+	
+	function partitionP(P, m){
+		let pList = [];
+		for (let i=0; i<P.length-m; i=i+m){
+			let subList = [];
+			for (let j=i; j<i+m; j++){
+				subList.push(P[j]);
+			}
+			pList.push(sublist);
+		}
+		sublist = [];
+		for (let j=i; j<P.length; j++){
+			sublist.push(P[j]);
+		}
+		pList.push(subList);
+	}
 	
 		window.onload = function () {
 		let canvas = document.getElementById('myCanvas');
@@ -408,14 +565,21 @@
 			});	
 		let circleButton = document.getElementById("circleB");
 		circleButton.addEventListener("click", function() {
-				drawFirstCircles();
+				grahamScan(points);
+				//drawFirstCircles();
 			});
 		let nextButton = document.getElementById("nextB")
 		nextButton.addEventListener("click", function() {
+				//currentRay = 1;
+				i = 1;
 				createPointsAtInfinity();
 				changePoints();
-				redrawAllPointsCanvas2();
+				redrawAllPointsCanvas2Beginning();
 				redrawAllCurrentEdgesCanvas2();
+				let center = checkDelaunayTriangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-3]);
+				currentCenter = center;
+				drawPointCanvas2(center);
+				growCircle(center, relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-3]);
 				/*
 				let canvas0 = document.getElementById('myCanvas0');
 				let ctx0 = canvas0.getContext('2d');
