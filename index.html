@@ -19,6 +19,14 @@
 		}
 	}
 		
+	class Triangle {
+		constructor(p1, p2, p3) {
+			this.p1 = p1;
+			this.p2 = p2;
+			this.p3 = p3;
+		}
+	}	
+	
 	var points = [];
 	var extendedPoints = [];
 	var relevantPoints = [];
@@ -37,13 +45,20 @@
 	var currentRay = 0;
 	var currentlyFoundPoint = 0;
 	var i = 1;
+	var counterI = 0;
 	var ki = 0;
 	var k = 0;
 	var initialPoint = 0;
-	
+	var hullPoints = [];
+	var hulls = [];
 	
 	function calculateK(){
-		k = Math.pow(2, Math.pow(2,i));
+		k = Math.pow(2, Math.pow(2,counterI));
+	}
+	
+	function calculate_m(){
+		let m = Math.pow(k,2);
+		return m;
 	}
 	
 	function redrawAllPoints(){
@@ -131,6 +146,16 @@
 			drawLineCanvas2(edge.p1, edge.p2);
 		}
 	}
+	
+	
+	function redrawAllTriangles(){
+		for (let i=0; i< triangles.length; i++){
+			drawLineCanvas2(triangles[i].p1, triangles[i].p2);
+			drawLineCanvas2(triangles[i].p2, triangles[i].p3);
+			drawLineCanvas2(triangles[i].p1, triangles[i].p3);
+		}
+	}
+	
 	
 	function drawLineCanvas2(p1, p2){
 		let canvas = document.getElementById('myCanvas2');
@@ -315,10 +340,10 @@
 	function checkPointOnBoundaryGrowingRay(){
 		let xc = currentCenter.x;
 		let yc = currentCenter.y;
-		for (let i=0; i<points.length; i++){
-			let distanceToPoint = calculateDistance(currentCenter, points[i]);
+		for (let i=0; i<extendedPoints.length; i++){
+			let distanceToPoint = calculateDistance(currentCenter, extendedPoints[i]);
 			if (distanceToPoint <= currentRay){
-			currentlyFoundPoint = pointsSet[i];
+			currentlyFoundPoint = extendedPoints[i];
 				return true;
 			}
 		}
@@ -412,7 +437,13 @@
 	function growCircle(center, p1, p2, p3){
 		let distance = calculateDistance(center, p1);
 		if (checkPointOnBoundaryGrowingRay() || currentRay >= distance){
-			return;
+			if (currentlyFoundPoint === p1){
+				t = new Triangle(p2, p3, currentlyFoundPoint);
+			drawLineCanvas2(p2, currentlyFoundPoint);
+			drawLineCanvas2(p3, currentlyFoundPoint);
+			return true;
+			}
+			return false;
 		}
 		let canvas = document.getElementById('myCanvas2');
 		let ctx = canvas.getContext("2d");
@@ -428,6 +459,25 @@
 		setTimeout(growCircle, 100, center, p1, p2, p3);
 	}
 	
+	function drawCircleCanvas2(){
+		let canvas = document.getElementById('myCanvas2');
+		let ctx = canvas.getContext("2d");
+		ctx.beginPath();
+		ctx.arc(currentCenter.x, currentCenter.y, currentRay, 0, 2*Math.PI);
+		ctx.closePath();
+		ctx.stroke();
+	}
+	
+	function drawCircleCanvas2Red(){
+		let canvas = document.getElementById('myCanvas2');
+		let ctx = canvas.getContext("2d");
+		ctx.beginPath();
+		ctx.arc(currentCenter.x, currentCenter.y, currentRay, 0, 2*Math.PI);
+		ctx.closePath();
+		ctx.strokeStyle = "red";
+		ctx.stroke();
+	}
+	
 	function createPoint(evt){
 		let xCoord = evt.clientX;
 		let yCoord = evt.clientY;
@@ -441,55 +491,10 @@
 		drawPoint(p);
 	}
 	
-	
-	function grahamScan(P){
-		setInitialPoint(P);
-		let sortedPoints = P.sort(radiallyCompare);
-		stack = [initialPoint, P[0]];
-		let i = 1;
-		while (i<P.length){
-			let last = stack.length - 1;
-			if (orientationDeterminant([stack[last-1],stack[last],points[i]]) < 0){
-				stack.push(P[i]);
-				i++;
-			} else {
-				stack.pop();
-			}
-		}
-		var c = document.getElementById("myCanvas");
-		var ctx = c.getContext("2d");
-		for (let i = 0; i<stack.length-1; i++){
-			ctx.beginPath();
-			ctx.moveTo(stack[i].x - rect.left, stack[i].y - rect.top);
-			ctx.lineTo(stack[i+1].x - rect.left, stack[i+1].y - rect.top);
-			ctx.closePath();
-			ctx.stroke();
-		}
-		ctx.beginPath();
-		ctx.moveTo(stack[stack.length-1].x - rect.left, stack[stack.length-1].y - rect.top);
-		ctx.lineTo(stack[0].x - rect.left, stack[0].y - rect.top);
-		ctx.closePath();
-		ctx.stroke();
-	}
-	
-	function radiallyCompare(a,b){
-		let orientation = orientationDeterminant([initialPoint, a, b]);
-		return orientation;
-	}
-	
-	function orientationDeterminant(pointsList){
-		let pointA = pointsList[0];
-		let pointB = pointsList[1];
-		let pointC = pointsList[2];
-		let result = pointB.x*pointC.y - pointA.x*pointC.y + pointA.x*pointB.y
-    - pointB.y*pointC.x + pointA.y*pointC.x - pointA.y*pointB.x;
-	
-		return result;
-	}
 		
 	function setInitialPoint(P){
 		let best = null;
-		for (i = 0; i < P.length; ++i){
+		for (let i = 0; i < P.length; ++i){
 			if (best===null || P[i].x < best.x){
 				best = P[i];
 			}
@@ -499,21 +504,41 @@
 		P.splice(index,1);
 	}
 	
-	function partitionP(P, m){
+	function partitionP(P){
+		calculateK();
+		let m = calculate_m();
 		let pList = [];
-		for (let i=0; i<P.length-m; i=i+m){
+		let i = 0;
+		for (i=0; i<P.length-m; i=i+m){
 			let subList = [];
 			for (let j=i; j<i+m; j++){
 				subList.push(P[j]);
 			}
-			pList.push(sublist);
+			pList.push(subList);
 		}
-		sublist = [];
+		let subList = [];
 		for (let j=i; j<P.length; j++){
-			sublist.push(P[j]);
+			subList.push(P[j]);
 		}
 		pList.push(subList);
+		return pList;
 	}
+	
+
+	function delaunayTriangulation(){
+		
+	}
+	
+	function redrawCanvas2(){
+		let canvas = document.getElementById('myCanvas2');
+		let ctx = canvas.getContext('2d');
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		createPointsAtInfinity();
+		redrawAllPointsCanvas2Beginning();
+		redrawAllTriangles();
+	}
+	
+	
 	
 		window.onload = function () {
 		let canvas = document.getElementById('myCanvas');
@@ -565,8 +590,7 @@
 			});	
 		let circleButton = document.getElementById("circleB");
 		circleButton.addEventListener("click", function() {
-				grahamScan(points);
-				//drawFirstCircles();
+				drawFirstCircles();
 			});
 		let nextButton = document.getElementById("nextB")
 		nextButton.addEventListener("click", function() {
@@ -576,10 +600,34 @@
 				changePoints();
 				redrawAllPointsCanvas2Beginning();
 				redrawAllCurrentEdgesCanvas2();
-				let center = checkDelaunayTriangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-3]);
-				currentCenter = center;
-				drawPointCanvas2(center);
-				growCircle(center, relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-3]);
+				let j = 0;
+				let found = false;
+				while ((j<extendedPoints.length) && !found){
+					let broken = false;
+					if ((extendedPoints[j] !== relevantPoints[0])&&(extendedPoints[j] !== relevantPoints[1])){
+						let center = checkDelaunayTriangle(relevantPoints[0], relevantPoints[1], extendedPoints[j]);
+						currentCenter = center;
+						currentRay = calculateDistance(currentCenter, relevantPoints[0]);
+						drawCircleCanvas2();
+						for (let k = 0; k<extendedPoints.length; k++){
+							if ((extendedPoints[k] !== relevantPoints[0])&&(extendedPoints[k] !== relevantPoints[1])&&(extendedPoints[k] !== extendedPoints[j])){
+								let dist = calculateDistance(extendedPoints[k], currentCenter);
+								if (dist < currentRay){
+									broken = true;
+									break;
+								}
+							}
+						}
+						if (!broken){
+							currentlyFoundPoint = extendedPoints[j];
+							break;
+						}
+					}
+					j++;
+				}
+				triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], currentlyFoundPoint));
+				redrawCanvas2();
+				drawCircleCanvas2Red();
 				/*
 				let canvas0 = document.getElementById('myCanvas0');
 				let ctx0 = canvas0.getContext('2d');
@@ -622,7 +670,6 @@ Jeff Erickson, John Iacono, Stefan Langerman, Pat Morin, Godfried Toussaint</em>
 from a given set of points. All points have a colour (in this website we will work on a 2 colours basis : each point is either red or blue). The new
 point will receive the same colour as its closest neighbour.<br>
 In this case, we consider that our points are found in a limited plane surface, and the distance between them is the physical distance in the plane.</p>
-<p> This problem has many real-world applications. For example, TODO </p>
 <h3> More formal definition </h3>
 We have a set <em>S</em> called training set of <em>n</em> points, separated in two subsets : the subset <em>R</em> (red points) and the subset <em>B</em> 
 (blue points). The nearest neighbour problem aims to find the colour of a new point <em>q</em>, given the fact that <em>q</em>'s colour will be the colour
@@ -648,9 +695,12 @@ If S is in general position (i.e. there exists no set of 4 points from S such th
 triangulation is unique and contains all the Delaunay edges. Thus, finding all the bichromatic Delaunay edges can be used to compute the nearest neighbour
 decision boundary.
 <h3> Pivots </h3>
-A very useful tool we will use in order to construct Delaunay triangulations is the <em>pivot operation</em>, which works as follows : <br>
+<p>A very useful tool we will use in order to construct Delaunay triangulations is the <em>pivot operation</em>, which works as follows : <br>
 Given a ray, the pivot operations returns the biggest circle whose center is on the ray, has the origin of the ray on its boundary and has no point of S 
-in its interior. 
+in its interior.</p>
+<p>At the very end of this website, you can find a Canvas in which you can add red and blue points by clicking on it. This Canvas will be used to illustrate
+the algorithm step by step. The first step explained in the Canvas is the pivot. Therefore, in order to have a clear representation of what a pivot is, one
+should read the following sections, and then go perform a pivot operation in the canvas.</p>
 <h3> Finding the first edge </h3>
 To begin, we will try to find a bichromatic edge in the set of points S. We will begin by linking any Red point from S to any blue point from S, creating a ray.
 <h4> First circle </h4>
@@ -667,6 +717,17 @@ of the formed circle (otherwise the circle could possibly be extended). Note tha
 Third, we know that there are no points of <em>B</em> in <em>C</em>. Finally, we also know that by construction there are no points from <em>R</em> in 
 <em>C1</em>. Therefore, there is no point from <em>S</em> in <em>C1</em>. We have thus created a circle with no point from <em>S</em> in its interior and
 with a red point <em>r'</em> and a blue one <em>b'</em> on its boundary. We can conclude that <em>(r',b')</em> is a bichromatic edge.</p> 
+<p>In order to obtain a more visual explanation, you can now perform a pivot in the Canvas at the end of the page.</p>
+<h4> Bringing Complexity in </h4>
+<p>After having observed the pivot illustration or simply after having read the above paragraphs, one can conclude that the complexity for growing the circles
+is ridiculously high if the points happen to have relatively big distances between them. In fact, for any 1 &le; m &le; n, there exists a data structure
+of size <em>O(m)</em> that can be constructed in <em>O(n log m)</em> time and that can perform pivots in <em>O((n/m) log m)</em> time per pivot. This is done
+by applying Chan's data structure to partition <em>S</em> into m/n groups of size m, and applying the Dobkin-Kirkpatrick data structure on each group. The
+Dobkin-Kirkpatrick data structure pre-processes a set of n points in <em>O(n log n)</em> time and performs pivot queries in <em>O(log n)</em>. To perform
+a query, each data structure is queried and the smallest found circle is returned.</p>
+<p> Therefore, what is the final complexity for the Pivot? The time to construct the m/n data structures is <em>m/n * O(m log m) = O(n log m)</em>, where 
+O(m log m) is the complexity of forming the convex hull for a set of points. Finally, as we have said, a query is performed in <em>O(log m)</em> for each data
+structure, thus a total of <em>m/n * O(log m) = O(n/m log m).</em></p>
 <h3> Finding additional points </h3>
 <p>We shall call <em>Q</em> the subset of <em>S</em> representing the set of vertices of <em>S</em> that contribute to the decision boundary. We shall also call
 <em>P</em> the current set of found relevant vertices. Therefore, we have the relation <em>P</em> &sube; <em>Q</em> &sube; <em>S</em>.</p>
@@ -692,7 +753,7 @@ we can conclude that we have found the complete set of relevant vertices. </p>
 Your browser does not support the HTML5 canvas tag.</canvas>
 <button id="colour">Blue</button>
 <button id="saveB">First line</button>
-<button id="circleB">Draw Circles</button>
+<button id="circleB">Pivot</button>
 <button id="nextB">Next</button>
 
 <canvas id="myCanvas2" width="2000" height="1000" style="border:1px solid #d3d3d3;">
