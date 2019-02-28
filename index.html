@@ -31,6 +31,7 @@
 	var extendedPoints = [];
 	var relevantPoints = [];
 	var triangles = [];
+	var relevantTriangles = [];
 	var redPoints = [];
 	var bluePoints = [];
 	var isColourRed = true;
@@ -489,6 +490,9 @@
 			bluePoints.push(p);
 		}
 		drawPoint(p);
+		if (bluePoints.length >= 1 && redPoints.length >= 1 && document.getElementById("saveB").disabled){
+			document.getElementById("saveB").disabled=false;
+		}
 	}
 	
 		
@@ -543,7 +547,9 @@
 		window.onload = function () {
 		let canvas = document.getElementById('myCanvas');
 		canvas.addEventListener('click',createPoint);
-	
+		document.getElementById("saveB").disabled=true;
+		document.getElementById("circleB").disabled=true;
+		document.getElementById("nextB").disabled=true;
 		let colourButton = document.getElementById("colour");
 		colourButton.addEventListener("click", function () {
                 if (isColourRed) {
@@ -587,10 +593,13 @@
 				canvas.removeEventListener('click',createPoint);
 				edges[0] = [redPoints[p1], bluePoints[p2]];
 				drawSimpleLine(redPoints[p1], bluePoints[p2]);
+				document.getElementById("circleB").disabled=false;
 			});	
 		let circleButton = document.getElementById("circleB");
 		circleButton.addEventListener("click", function() {
 				drawFirstCircles();
+				document.getElementById("circleB").disabled=true;
+				document.getElementById("nextB").disabled=false;
 			});
 		let nextButton = document.getElementById("nextB")
 		nextButton.addEventListener("click", function() {
@@ -625,7 +634,12 @@
 					}
 					j++;
 				}
-				triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], currentlyFoundPoint));
+				let t = new Triangle(relevantPoints[0], relevantPoints[1], currentlyFoundPoint);
+				triangles.push(t);
+				relevantTriangles.push(t);
+				triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-1]));
+				triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-2]));
+				triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-3]));
 				redrawCanvas2();
 				drawCircleCanvas2Red();
 				/*
@@ -718,6 +732,11 @@ Third, we know that there are no points of <em>B</em> in <em>C</em>. Finally, we
 <em>C1</em>. Therefore, there is no point from <em>S</em> in <em>C1</em>. We have thus created a circle with no point from <em>S</em> in its interior and
 with a red point <em>r'</em> and a blue one <em>b'</em> on its boundary. We can conclude that <em>(r',b')</em> is a bichromatic edge.</p> 
 <p>In order to obtain a more visual explanation, you can now perform a pivot in the Canvas at the end of the page.</p>
+<h4>Why do we use this?</h4>
+<p>Building the two circles is a certain way to find two relevant points for the decision boundary, because of the following affirmation : <em>If there is a
+circle with a red point r and a blue point b on its boundary, and no red (resp. blue) point in its interior, then r (resp. b) contributes to the decision
+boundary</em>. Therefore, by construction, we know that the two points that we have found are on the boundary of a circle with no other point in its inside,
+and are thus relevant to the decision boundary.</p>
 <h4> Bringing Complexity in </h4>
 <p>After having observed the pivot illustration or simply after having read the above paragraphs, one can conclude that the complexity for growing the circles
 is ridiculously high if the points happen to have relatively big distances between them. In fact, for any 1 &le; m &le; n, there exists a data structure
@@ -735,12 +754,16 @@ By the rule of the two circles applied above, <em>Q</em> already contains an edg
 <strong>Augmented Delaunay triangulation</strong> method. This method consists in finding the Delaunay triangulation of <em>P</em> &cup; <em>{v1, v2, v3}</em> 
 where <em>v1, v2, v3</em> are 3 black vertices set to infinity. We call them black in order not to give them the same colour as any of the points from 
 <em>S</em>. Please note that <em>v1, v2, v3</em> &#8840; <em>S</em>.</p>
-For any triangle <em>t</em>, we will call <em>C(t)</em> the circle that contains the 3 vertices defining <em>t</em> on its boundary. We will use the following
+<p>As this website is limited in space, we were of course not able to place the three black points at infinity. We will place them far enough from each so that
+the triangle formed by them completly covers the area given to the user to put the points in.</p>
+<p>For any triangle <em>t</em>, we will call <em>C(t)</em> the circle that contains the 3 vertices defining <em>t</em> on its boundary. We will use the following
 lemma : <br>
 Let &#8709;&ne;<em>P</em>&sube;<em>Q</em>. The following statements are equivalent : <br>
 1. For every triangle t in the augmented Delaunay triangulation of <em>P</em>, if t has a blue (resp. red) vertex then <em>C(t)</em> does not have a red (resp.
 blue) point of S in its interior. <br>
-2. <em>P</em>=<em>Q</em>. <br>
+2. <em>P</em>=<em>Q</em>. <br></p>
+<p>In order to se the placement of the black points and an example of such a triangle, the user should press the <em>Triangle</em> button besides the Canvas.</p>
+
 
 <p>In order to find the additional points, we will iterate on each triangle <em>t</em> from the current Delaunay triangulation of <em>P</em>. If <em>t</em>
 contains a blue vertex <em>b</em>, then pivot in <em>R</em> along the ray with origin at <em>b</em> and passing through <em>C(t)</em>. If the result is
@@ -754,7 +777,7 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 <button id="colour">Blue</button>
 <button id="saveB">First line</button>
 <button id="circleB">Pivot</button>
-<button id="nextB">Next</button>
+<button id="nextB">Triangle</button>
 
 <canvas id="myCanvas2" width="2000" height="1000" style="border:1px solid #d3d3d3;">
 Your browser does not support the HTML5 canvas tag.</canvas>
