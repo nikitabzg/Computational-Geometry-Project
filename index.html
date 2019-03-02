@@ -244,6 +244,39 @@
 		return center;
 	}	
 	
+	function pivotLemma3(){
+		function moveCircle(p, pointsSet){
+			let x;
+			advanceCenterCanvas2();
+			let radius = calculateDistance(p, currentCenter);
+			currentRay = radius;
+			if (checkPointOnBoundary(pointsSet)){
+				setTimeout(redrawCanvas2, 3000);
+				return;
+			}
+			var c = document.getElementById("myCanvas2");
+			var ctx = c.getContext("2d");
+			ctx.clearRect(0, 0, c.width, c.height);
+			redrawCanvas2();
+			ctx.beginPath();
+			ctx.arc(currentCenter.x, currentCenter.y, currentRay, 0, 2*Math.PI);
+			ctx.closePath();
+			ctx.stroke();
+			setTimeout(moveCircle, 100, p, pointsSet);
+		};
+		let p1 = currentPoints[0];
+		let p2 = currentPoints[1];
+		let p3 = extendedPoints[extendedPoints.length-1];
+		currentRay = 0;
+		if (p1.colour === "red"){
+			moveCircle(p1, bluePoints);
+		} else {
+			moveCircle(p1, redPoints);
+		}
+		return true;
+	}
+	
+	
 	function drawFirstCircles(){
 		let p1 = currentPoints[0];
 		let p2 = currentPoints[1];
@@ -389,6 +422,13 @@
 		return m;
 	}
 	
+	function calculateMCanvas2(){
+		let p1 = currentPoints[0];
+		let p2 = currentPoints[1];
+		let m = ((p2.y)-(p1.y))/((p2.x)-(p1.x));
+		return m;
+	}
+	
 	function advanceCenter(){
 		let p1 = currentPoints[0];
 		let p2 = currentPoints[1];
@@ -400,6 +440,32 @@
 		let y1 = p1.y - rect.top;
 		let x2 = p2.x - rect.left;
 		let y2 = p2.y - rect.top;
+		let xc = 0;
+		let yc = 0;
+		if (p1.x < p2.x){
+			xc = currentCenter.x + 1;
+		} else {
+			xc = currentCenter.x - 1;
+		}
+		if (p1.y < p2.y){
+			yc = currentCenter.y + m;
+		} else {
+			yc = currentCenter.y - m;
+		}
+		currentCenter = new Point(xc, yc, "black");
+	}
+	
+	function advanceCenterCanvas2(){
+		let p1 = currentPoints[0];
+		let p2 = currentPoints[1];
+		let m = calculateMCanvas2();
+		if (m<0){
+			m = -m;
+		}
+		let x1 = p1.x;
+		let y1 = p1.y;
+		let x2 = p2.x;
+		let y2 = p2.y;
 		let xc = 0;
 		let yc = 0;
 		if (p1.x < p2.x){
@@ -477,6 +543,7 @@
 		ctx.closePath();
 		ctx.strokeStyle = "red";
 		ctx.stroke();
+		ctx.strokeStyle = "black";
 	}
 	
 	function createPoint(evt){
@@ -540,6 +607,7 @@
 		createPointsAtInfinity();
 		redrawAllPointsCanvas2Beginning();
 		redrawAllTriangles();
+		redrawAllCurrentEdgesCanvas2();
 	}
 	
 	
@@ -601,9 +669,8 @@
 				document.getElementById("circleB").disabled=true;
 				document.getElementById("nextB").disabled=false;
 			});
-		let nextButton = document.getElementById("nextB")
+		let nextButton = document.getElementById("nextB");
 		nextButton.addEventListener("click", function() {
-				//currentRay = 1;
 				i = 1;
 				createPointsAtInfinity();
 				changePoints();
@@ -637,35 +704,38 @@
 				let t = new Triangle(relevantPoints[0], relevantPoints[1], currentlyFoundPoint);
 				triangles.push(t);
 				relevantTriangles.push(t);
-				triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-1]));
-				triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-2]));
-				triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-3]));
 				redrawCanvas2();
 				drawCircleCanvas2Red();
-				/*
-				let canvas0 = document.getElementById('myCanvas0');
-				let ctx0 = canvas0.getContext('2d');
-				let rect0 = canvas0.getBoundingClientRect();
-				ctx0.beginPath();
-				ctx0.arc(10, 320, 10, 0, 2*Math.PI);
-				ctx0.fillStyle = pointColour;
-				ctx0.fill();
-				*/
-		/*
-				
-				console.log(extendedEdges);
-				//drawSimpleLine(extendedEdges[0].p1, extendedEdges[0].p2);
-				var c = document.getElementById("myCanvas");
-				var ctx = c.getContext("2d");
-				ctx.beginPath();
-				ctx.moveTo(extendedEdges[0].p1.x - rect.left, extendedEdges[0].p1.y - rect.top);
-				ctx.lineTo(extendedEdges[0].p2.x - rect.left, extendedEdges[0].p2.y - rect.top);
-				ctx.closePath();
-				ctx.stroke();
-				//drawSimpleLine(extendedEdges[1].p1, extendedEdges[1].p2);
-				//drawSimpleLine(extendedEdges[2].p1, extendedEdges[2].p2);
-		*/
 			});	
+		let lemmaButton = document.getElementById("lemma3");
+		lemmaButton.addEventListener("click", function(){
+			relevantTriangles.pop();
+			triangles.pop();
+			triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-1]));
+			triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-2]));
+			triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-3]));
+			redrawCanvas2();
+			let p2 = checkDelaunayTriangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-3]);
+			currentPoints = [relevantPoints[0], p2];
+			currentCenter = relevantPoints[0];
+			edges.push([relevantPoints[0], p2]);
+			pivotLemma3();
+			if (currentlyFoundPoint === extendedPoints[extendedPoints.length-3]){
+				currentPoints = [relevantPoints[1], p2];
+				currentCenter = relevantPoints[1];
+				edges.pop();
+				edges.push([relevantPoints[1], p2]);
+				pivotLemma3();
+				if (currentlyFoundPoint !== extendedPoints[extendedPoints.length-3]){
+					relevantEdges.push(new Edge(relevantPoints[1], currentlyFoundPoint));
+				}
+			} else {
+				console.log("ayo");
+				relevantEdges.push(new Edge(relevantPoints[0], currentlyFoundPoint));
+				//redrawCanvas2();
+				console.log("ayo2");
+			}
+		});
 	}
 	
 
@@ -778,7 +848,7 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 <button id="saveB">First line</button>
 <button id="circleB">Pivot</button>
 <button id="nextB">Triangle</button>
-
+<button id="lemma3">Check Triangles</button>
 <canvas id="myCanvas2" width="2000" height="1000" style="border:1px solid #d3d3d3;">
 Your browser does not support the HTML5 canvas tag.</canvas>
 
