@@ -27,6 +27,14 @@
 		}
 	}	
 	
+	class EdgeTriangle {
+		constructor(e1, e2, e3){
+			this.e1 = e1;
+			this.e2 = e2;
+			this.e3 = e3;
+		}
+	}
+	
 	var points = [];
 	var extendedPoints = [];
 	var relevantPoints = [];
@@ -596,9 +604,117 @@
 	}
 	
 
+	function maxPoint(){
+		let maxs = [points[0]];
+		for (let i=1; i<points.length; i++){
+			if (points[i].y>maxs[0].y){
+				maxs = [points[i]];
+			} else if (points[i].y == maxs[0].y){
+				maxs.push(points[i]);
+			}
+		}
+		if (maxs.length == 1){
+			return maxs[0];
+		}
+		let point = maxs[0];
+		for (let i=1; i<maxs.length; i++){
+			if (maxs[i].x>point.x){
+				point = maxs[i];
+			}
+		}
+		return point;
+	}
+	
+	function shuffle(array) {   //stackOverflow source
+	  var currentIndex = array.length, temporaryValue, randomIndex;
+
+	  // While there remain elements to shuffle...
+	  while (0 !== currentIndex) {
+
+		// Pick a remaining element...
+		randomIndex = Math.floor(Math.random() * currentIndex);
+		currentIndex -= 1;
+
+		// And swap it with the current element.
+		temporaryValue = array[currentIndex];
+		array[currentIndex] = array[randomIndex];
+		array[randomIndex] = temporaryValue;
+	  }
+	  return array;
+	}
+
+	
 	function delaunayTriangulation(){
+		let firstPoint = maxPoint();
+		let pointsLst = points;
+		pointsLst.splice(pointsLst.indexOf(firstPoint, 1));
+		let shuffledPoints = shuffle(points);
+		for (let r=0; r<pointsLst.length; r++){
+			//Find triangle pipjpk containing pr
+			//if pr is inside triangle,
+				relevantEdges.push(new Edge(pi, pr));
+				relevantEdges.push(new Edge(pj, pr));
+				relevantEdges.push(new Edge(pk, pr));
+				legalizeEdge(relevantEdges[relevantEdges.length-3]);
+				legalizeEdge(relevantEdges[relevantEdges.length-2]);
+				legalizeEdge(relevantEdges[relevantEdges.length-1]);
+			//else 
+				//add vertice from pr to pk and to vercies from other triangle (incident)
+				
+		}
 		
 	}
+	
+	function findAdjacentTriangle(edge, node){
+		for (let i=0; i<relevantTriangles; i++){
+			if ((relevantTriangles[i].p1 != node && relevantTriangles[i].p2 != node && relevantTriangles[i].p3 != node)&&
+			(relevantTriangles[i].p1 === edge.p1 || relevantTriangles[i].p2 === edge.p1 || relevantTriangles[i].p3 === edge.p1)&&
+			(relevantTriangles[i].p1 === edge.p2 || relevantTriangles[i].p2 === edge.p2 || relevantTriangles[i].p3 === edge.p2)){
+				return relevantTriangles[i];
+			}
+		}
+		return false;
+	}
+	
+	function findOppositeNode(edge, adjacentTriangle){
+		if (adjacentTriangle.p1 !== edge.p1 && adjacentTriangle.p1 != edge.p2){
+			return p1;
+		}
+		if (adjacentTriangle.p2 !== edge.p1 && adjacentTriangle.p2 != edge.p2){
+			return p2;
+		}
+		if (adjacentTriangle.p3 !== edge.p1 && adjacentTriangle.p3 != edge.p2){
+			return p3;
+		}
+	}	
+	
+	function legalizeEdge(pr, edge, triangle){
+		let adjacentTriangle = findAdjacentTriangle(edge, pr);
+		let oppositeNode = findOppositeNode(edge, adjacentTriangle);
+		if (!checkLegalEdge(pr, triangle, oppositeNode)){
+			if (adjacentTriangle !== false){
+				relevantTriangles.splice(relevantTriangles.indexOf(triangle),1);
+				relevantTriangles.splice(relevantTriangles.indexOf(adjacentTriangle),1);
+				relevantTriangles.push(new Triangle())
+				relevantTriangles.push(new Triangle(pr, edge.p1, oppositeNode));
+				relevantTriangles.push(new Triangle(pr, edge.p2, oppositeNode));
+				legalizeEdge(pr, new Edge(edge.p1, oppositeNode), relevantTriangles[relevantTriangles.length-2]);
+				legalizeEdge(pr, new Edge(edge.p2, oppositeNode), relevantTriangles[relevantTriangles.length-1]);
+			}
+		}
+	}
+	
+	
+	function checkLegalEdge(pr, triangle, oppositeNode){
+		let center = checkDelaunayTriangle(triangle.p1, triangle.p2, triangle.p3);
+		let ray = calculateDistance(center, edge.p1);
+		let distance = calculateDistance(center, oppositeNode);
+		if (distance > ray){
+			return true;
+		}
+		return false;
+	}
+	
 	
 	function redrawCanvas2(){
 		let canvas = document.getElementById('myCanvas2');
