@@ -27,13 +27,41 @@
 		}
 	}	
 	
-	class EdgeTriangle {
-		constructor(e1, e2, e3){
-			this.e1 = e1;
-			this.e2 = e2;
-			this.e3 = e3;
+	
+	class Node{
+		constructor(triangle){
+			this.triangle = triangle;
+			this.children = [];
+		}
+		addChild(node){
+			this.children.push(node);
 		}
 	}
+	
+	class PointLocationStructure{
+		let triangles = [];
+		let root = 0;
+		
+		addTriangle(node){
+			triangles.push(node);
+		}
+		
+		addChildToNode(triangle, child){
+			var index = triangles.indexOf(triangle);
+			triangles[index].addChild(child); 
+		}
+		
+		addChildToTriangle(triangle, child){
+			for (let i=0; i<triangles.length; i++){
+				if (triangles[i].triangle == triangle){
+					break;
+				}
+			}
+			triangles[i].addChild(child);
+		}
+	}
+	
+	
 	
 	var points = [];
 	var extendedPoints = [];
@@ -60,6 +88,7 @@
 	var initialPoint = 0;
 	var hullPoints = [];
 	var hulls = [];
+	var dag = 0;
 	
 	function calculateK(){
 		k = Math.pow(2, Math.pow(2,counterI));
@@ -645,25 +674,120 @@
 
 	
 	function delaunayTriangulation(){
-		let firstPoint = maxPoint();
-		let pointsLst = points;
+		let firstPoint = extendedPoints[extendedPoints.length-3];
+		let Pminus1 = extendedPoints[extendedPoints.length-2];
+		let Pminus2 = extendedPoints[extendedPoints.length-1];
+		let pointsLst = extendedPoints;
 		pointsLst.splice(pointsLst.indexOf(firstPoint, 1));
-		let shuffledPoints = shuffle(points);
-		for (let r=0; r<pointsLst.length; r++){
-			//Find triangle pipjpk containing pr
-			//if pr is inside triangle,
+		
+		dag = new PointLocationStructure();
+		dag.addTriangle(new Node(new Triangle(firstPoint, Pminus1, Pminus2)));
+		let shuffledPoints = shuffle(pointsLst);
+		for (let r=0; r<shuffledPoints.length; r++){
+			let pr = shuffledPoints[r];
+			let foundTriangle = browseStructureToFindTriangle(pr, dag.root);
+			let edge = checkPointOnLine(foundTriangle, pr);
+			if (edge === false){
 				relevantEdges.push(new Edge(pi, pr));
 				relevantEdges.push(new Edge(pj, pr));
 				relevantEdges.push(new Edge(pk, pr));
-				legalizeEdge(relevantEdges[relevantEdges.length-3]);
-				legalizeEdge(relevantEdges[relevantEdges.length-2]);
-				legalizeEdge(relevantEdges[relevantEdges.length-1]);
-			//else 
-				//add vertice from pr to pk and to vercies from other triangle (incident)
-				
+				addTriangleToStructure(foundTriangle, new Triangle(pr, pi, pj), new Triangle(pr, pi, pk), new Triangle(pr, pj, pk));
+				legalizeEdge(pr, edge, foundTriangle);
+				legalizeEdge(pr, findEdge(new Edge(pj, pk)), foundTriangle);
+				legalizeEdge(pr, findEdge(new Edge(pk, pi)), foundTriangle);
+			}				
+			else{
+				let pk = findThirdPointTriangle(foundTriangle, edge.p1, edge.p2);
+				let pl = findOppositeNode(edge, findAdjacentTriangle(edge, pk));
+				relevantEdges.push(new Edge(pr, pk));
+				relevantEdges.push(new Edge(pr, pl));
+				legalizeEdge(pr, findEdge(new Edge(pi, pl)), foundTriangle);
+				legalizeEdge(pr, findEdge(new Edge(pl, pj)), foundTriangle);
+				legalizeEdge(pr, findEdge(new Edge(pj, pk)), foundTriangle);
+				legalizeEdge(pr, findEdge(new Edge(pk, pi)), foundTriangle);
+				addTrianglesAfterFlip(initial1, initial2, after1, after2)
+			}	
 		}
-		
 	}
+	
+	function findEdge(edge){
+		let p1 = edge.p1;
+		let p2 = edge.p2;
+		for (let i=0; i<extendedEdges.length; i++){
+			if ((extendedEdges[i].p1 === p1 && extendedEdges[i].p2 === p2)||((extendedEdges[i].p1 === p2 && extendedEdges[i].p2 === p1))){
+				return extendedEdges[i];
+			}
+		}
+		return false;
+	}
+	
+	function addTriangleToStructure(initialTriangle, triangle1, triangle2, triangle3){
+		let ntriangle1 = new Node(triangle1);
+		let ntriangle2 = new Node(triangle2);
+		let ntriangle3 = new Node(triangle3);
+		dag.addChildToTriangle(initialTriangle, ntriangle1);
+		dag.addChildToTriangle(initialTriangle, ntriangle2);
+		dag.addChildToTriangle(initialTriangle, ntriangle3);
+		dag.triangles.push(ntriangle1);
+		dag.triangles.push(ntriangle2);
+		dag.triangles.push(ntriangle3);
+		relevantTriangles.splice(relevantTriangles.indexOf(initialTriangle), 1);
+		relevantTriangles.push(triangle1);
+		relevantTriangles.push(triangle2);
+		relevantTriangles.push(triangle3);
+	}
+	
+	function addTriangleToStructure(initialTriangle, triangle1, triangle2){
+		let ntriangle1 = new Node(triangle1);
+		let ntriangle2 = new Node(triangle2);
+		dag.addChildToTriangle(initialTriangle, ntriangle1);
+		dag.addChildToTriangle(initialTriangle, ntriangle2);
+		dag.triangles.push(ntriangle1);
+		dag.triangles.push(ntriangle2);
+		relevantTriangles.splice(relevantTriangles.indexOf(initialTriangle), 1);
+		relevantTriangles.push(triangle1);
+		relevantTriangles.push(triangle2);
+	}
+	
+	function addTrianglesAfterFlip(initial1, initial2, after1, after2){
+		let ntriangle1 = new Node(after1);
+		let ntriangle2 = new Node(after2);
+		dag.triangles.push(ntriangle1);
+		dag.triangles.push(ntriangle2);
+		dag.addChildToTriangle(initial1, ntriangle1);
+		dag.addChildToTriangle(initial1, ntriangle2);
+		dag.addChildToTriangle(initial2, ntriangle1);
+		dag.addChildToTriangle(initial2, ntriangle2);
+		relevantTriangles.splice(relevantTriangles.indexOf(initial1), 1);
+		relevantTriangles.splice(relevantTriangles.indexOf(initial2), 1);
+		relevantTriangles.push(after1);
+		relevantTriangles.push(after2);
+	}
+	
+	function findThirdPointTriangle(triangle, point1, point2){
+		if (triangle.p1 != point1 && triangle.p1 != point2){
+			return triangle.p1;
+		}
+		if (triangle.p2 != point1 && triangle.p2 != point2){
+			return triangle.p2;
+		}
+		return triangle.p3;
+	}
+	
+	function browseStructureToFindTriangle(point, startNode){
+		if (startNode.children.length !== 0){
+			let children = startNode.children;
+			for (let i=; i<children.length; i++){
+				if (checkPointInsideTriangle(children[i].triangle, point)){
+					browseStructureToFindTriangle(point, children[i]);
+					break;
+				}
+			}
+		} else {
+			return startNode.triangle;
+		}
+	}
+	
 	
 	function findAdjacentTriangle(edge, node){
 		for (let i=0; i<relevantTriangles; i++){
@@ -715,6 +839,43 @@
 		return false;
 	}
 	
+	function checkPointInsideTriangle(triangle, point){
+		let t1 = new Triangle(triangle.p1, triangle.p2, point);
+		let t2 = new Triangle(triangle.p2, triangle.p3, point);
+		let t3 = new Triangle(triangle.p1, triangle.p3, point);
+		
+		let true1 = (rightOrient(t1) && rightOrient(t2) && rightOrient(t3))
+		let true2 = (!rightOrient(t1) && !rightOrient(t2) && !rightOrient(t3))
+		
+		return (true1 || true2);
+	}
+	
+	function rightOrient(point1, point2, point3){
+		let res = point2.x*point3.y - point1.x*point3.y + point1.x*point2.y - point2.y*point3.x + point1.y*point3.x - point1.y*point2.x;
+		if (res>0){
+			return true;
+		}
+		return false;
+	}
+	
+	function checkPointOnLine(triangle, point){
+		let m = calculateM(triangle.p1, triangle.p2);
+		let m2 = calculateM(triangle.p1, point);
+		if (m === m2){
+			return [triangle.p1, triangle.p2];
+		}
+		m = calculateM(triangle.p2, triangle.p3);
+		m2 = calculateM(triangle.p2, point);
+		if (m === m2){
+			return [triangle.p2, triangle.p3];
+		}
+		m = calculateM(triangle.p1, triangle.p3);
+		m2 = calculateM(triangle.p1, point);
+		if (m === m2){
+			return [triangle.p1, triangle.p3]);
+		}
+		return false;
+	}
 	
 	function redrawCanvas2(){
 		let canvas = document.getElementById('myCanvas2');
