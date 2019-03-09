@@ -1094,6 +1094,16 @@ is at least one blue vertex and at least one red vertex.<br>
 If S is in general position (i.e. there exists no set of 4 points from S such that they all lie on the boundary of the same circle), then the Delaunay
 triangulation is unique and contains all the Delaunay edges. Thus, finding all the bichromatic Delaunay edges can be used to compute the nearest neighbour
 decision boundary.
+<h3>How does the algorithm work?</h3>
+<p>We describe an algorithm that, given a value <em>K</em> &#x2265; k, find the set of all bichromatic Delaunay edges in timple complexity <em>O((K<sup>2</sup>
++n) log K)</em>. Ideally, we want an algorithm which runs in <em>O(n log K)</em>, therefore we must work with values of K &#8804; &#8730;n.</p>
+<p>In order to obtain the good value for K, we repeatedly try to guess it by using values of the form K = 2<sup>2<sup>i</sup></sup>, for i = 0, 1,..., 
+log log n. Once we took a guess for the value of K, we launch the algorithm until either it finds the entire decision boundary or until it determines that 
+K &#60; k. In the first case, the problem is solved. In the latter, restrt with the next value of K, unless now K excedes &#8730;n. In this case, stop the
+algorithm and run a traditional <em>O(n log n)</em> algorithm to solve the problem.</p>
+<h3> What is the cost of the runs in total?</h3>
+In the worst case, we run the algorithm for all values of i from 0 to &#8730;n. One run has the cost of <em>O(n log 2<sup>2<sup>i</sup></sup>)</em> for a fixed
+i. Therefore, the total cost is : &Sigma;<sub>i=0</sub> <sup>log log n</sup> !!!!!!!!!!!!!!!!!!!!!!!!!!TO BE ASKED !!!!!!!!!!!!!!!!!!!!!!!!!!!!  
 <h3> Pivots </h3>
 <p>A very useful tool we will use in order to construct Delaunay triangulations is the <em>pivot operation</em>, which works as follows : <br>
 Given a ray, the pivot operations returns the biggest circle whose center is on the ray, has the origin of the ray on its boundary and has no point of S 
