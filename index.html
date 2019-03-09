@@ -853,8 +853,8 @@
 				let adjacentTriangle = findAdjacentTriangle(edge, thirdPoint);
 				console.log(adjacentTriangle);
 				let oppositePoint = findOppositeNode(edge, adjacentTriangle);
-				relevantTriangles.splice(relevantTriangles.indexOf(triangle));
-				relevantTriangles.splice(relevantTriangles.indexOf(adjacentTriangle));
+				relevantTriangles.splice(relevantTriangles.indexOf(triangle), 1);
+				relevantTriangles.splice(relevantTriangles.indexOf(adjacentTriangle), 1);
 				let t1 = new Triangle(points[i], edge.p1, thirdPoint);
 				let t2 = new Triangle(points[i], edge.p2, thirdPoint);
 				let t3 = new Triangle(points[i], edge.p1, oppositePoint);
