@@ -483,17 +483,16 @@
 	}
 	
 	function calculateMCanvas2(){
-		console.log(currentPoints);
 		let p1 = currentPoints[0];
 		let p2 = currentPoints[1];
 		let m = ((p2.y)-(p1.y))/((p2.x)-(p1.x));
 		return m;
 	}
 	
-	/*
-	function calculateMCanvas2(p1, p2){
+	
+	function calculateMCanvas2Delaunay(p1, p2){
 		return ((p2.y)-(p1.y))/((p2.x)-(p1.x));
-	}*/
+	}
 	
 	function advanceCenter(){
 		let p1 = currentPoints[0];
@@ -804,18 +803,18 @@
 	
 	
 	function checkPointOnLine(triangle, point){
-		let m = calculateMCanvas2(triangle.p1, triangle.p2);
-		let m2 = calculateMCanvas2(triangle.p1, point);
+		let m = calculateMCanvas2Delaunay(triangle.p1, triangle.p2);
+		let m2 = calculateMCanvas2Delaunay(triangle.p1, point);
 		if (m === m2){
 			return [triangle.p1, triangle.p2];
 		}
-		m = calculateMCanvas2(triangle.p2, triangle.p3);
-		m2 = calculateMCanvas2(triangle.p2, point);
+		m = calculateMCanvas2Delaunay(triangle.p2, triangle.p3);
+		m2 = calculateMCanvas2Delaunay(triangle.p2, point);
 		if (m === m2){
 			return [triangle.p2, triangle.p3];
 		}
-		m = calculateMCanvas2(triangle.p1, triangle.p3);
-		m2 = calculateMCanvas2(triangle.p1, point);
+		m = calculateMCanvas2Delaunay(triangle.p1, triangle.p3);
+		m2 = calculateMCanvas2Delaunay(triangle.p1, point);
 		if (m === m2){
 			return [triangle.p1, triangle.p3];
 		}
@@ -848,11 +847,11 @@
 		for (let i=0; i<points.length; i++){
 			console.log(i);
 			let triangle = findContainingTriangle(points[i]);
-			console.log(triangle);
 			let edge = checkPointOnLine(triangle, points[i]);
 			if (edge !== false){
 				let thirdPoint = findThirdPointTriangle(triangle, edge.p1, edge.p2);
 				let adjacentTriangle = findAdjacentTriangle(edge, thirdPoint);
+				console.log(adjacentTriangle);
 				let oppositePoint = findOppositeNode(edge, adjacentTriangle);
 				relevantTriangles.splice(relevantTriangles.indexOf(triangle));
 				relevantTriangles.splice(relevantTriangles.indexOf(adjacentTriangle));
@@ -876,7 +875,7 @@
 				let b = triangle.p2;
 				let c = triangle.p3;
 				
-				relevantTriangles.splice(relevantTriangles.indexOf(triangle));
+				relevantTriangles.splice(relevantTriangles.indexOf(triangle), 1);
 				
 				let first = new Triangle(a, b, points[i]);
 				let second = new Triangle(a, c, points[i]);
@@ -892,7 +891,7 @@
 			}
 			//drawAllTriangles();
 		}
-		//removeAllPP(superTriangle.p1, superTriangle.p2, superTriangle.p3);
+		removeAllPP(superTriangle.p1, superTriangle.p2, superTriangle.p3);
 	}
 	
 	
@@ -901,8 +900,8 @@
 		if (neighbourTriangle !== false){
 			let oppositeNode = findOppositeNode(edge, neighbourTriangle);
 			if (!checkLegalEdge(newPoint, triangle, oppositeNode, edge)){
-				relevantTriangles.splice(relevantTriangles.indexOf(triangle));
-				relevantTriangles.splice(relevantTriangles.indexOf(neighbourTriangle));
+				relevantTriangles.splice(relevantTriangles.indexOf(triangle), 1);
+				relevantTriangles.splice(relevantTriangles.indexOf(neighbourTriangle), 1);
 				let firstTriangle = new Triangle(oppositeNode, edge.p1, newPoint);
 				let secondTriangle = new Triangle(oppositeNode, edge.p2, newPoint);
 				relevantTriangles.push(firstTriangle);
@@ -951,9 +950,9 @@
 		canvas.addEventListener('click',createPoint);
 		document.getElementById("saveB").disabled=true;
 		document.getElementById("circleB").disabled=true;
-		document.getElementById("nextB").disabled=true;
+		//document.getElementById("nextB").disabled=true;
 		document.getElementById("lemma3").disabled=true;
-		document.getElementById("delaunayB").disabled=true;
+		//document.getElementById("delaunayB").disabled=true;
 		let colourButton = document.getElementById("colour");
 		colourButton.addEventListener("click", function () {
                 if (isColourRed) {
