@@ -39,25 +39,32 @@
 	}
 	
 	class PointLocationStructure{
-		let triangles = [];
-		let root = 0;
+		constructor(){
+			this.triangles = [];
+			this.root = 0;
+		}
 		
 		addTriangle(node){
-			triangles.push(node);
+			this.triangles.push(node);
 		}
 		
 		addChildToNode(triangle, child){
-			var index = triangles.indexOf(triangle);
-			triangles[index].addChild(child); 
+			var index = this.triangles.indexOf(triangle);
+			this.triangles[index].addChild(child); 
 		}
 		
 		addChildToTriangle(triangle, child){
-			for (let i=0; i<triangles.length; i++){
-				if (triangles[i].triangle == triangle){
-					break;
-				}
+			if (this.triangles.length == 1){
+				this.triangles[0].addChild(child);
 			}
-			triangles[i].addChild(child);
+			else{
+				for (let i=0; i<this.triangles.length; i++){
+					if (this.triangles[i].triangle === triangle){
+						break;
+					}
+				}
+				this.triangles[i].addChild(child);
+			}
 		}
 	}
 	
@@ -89,6 +96,7 @@
 	var hullPoints = [];
 	var hulls = [];
 	var dag = 0;
+	var foundTriangle = 0;
 	
 	function calculateK(){
 		k = Math.pow(2, Math.pow(2,counterI));
@@ -241,6 +249,7 @@
 	}
 	
 	function createPointsAtInfinity(){
+		extendedPoints = [];
 		let canvas2 = document.getElementById('myCanvas2');
 		let ctx2 = canvas2.getContext('2d');
 		let rect2 = canvas2.getBoundingClientRect();
@@ -280,6 +289,20 @@
 		center.y = -1*(center.x - (p1.x+p2.x)/2)/slope1 + (p1.y+p2.y)/2;
 		return center;
 	}	
+	
+	function redoCanvas2(){
+		var c = document.getElementById("myCanvas2");
+		var ctx = c.getContext("2d");
+		ctx.clearRect(0, 0, c.width, c.height);
+		relevantEdges = [];
+		extendedEdges = [];
+		edges = [];
+		relevantPoints = [];
+		relevantTriangles = [];
+		triangles = [];
+		redrawPureCanvas2();
+	}
+	
 	
 	function pivotLemma3(){
 		function moveCircle(p, pointsSet){
@@ -460,11 +483,17 @@
 	}
 	
 	function calculateMCanvas2(){
+		console.log(currentPoints);
 		let p1 = currentPoints[0];
 		let p2 = currentPoints[1];
 		let m = ((p2.y)-(p1.y))/((p2.x)-(p1.x));
 		return m;
 	}
+	
+	/*
+	function calculateMCanvas2(p1, p2){
+		return ((p2.y)-(p1.y))/((p2.x)-(p1.x));
+	}*/
 	
 	function advanceCenter(){
 		let p1 = currentPoints[0];
@@ -673,42 +702,22 @@
 	}
 
 	
-	function delaunayTriangulation(){
-		let firstPoint = extendedPoints[extendedPoints.length-3];
-		let Pminus1 = extendedPoints[extendedPoints.length-2];
-		let Pminus2 = extendedPoints[extendedPoints.length-1];
-		let pointsLst = extendedPoints;
-		pointsLst.splice(pointsLst.indexOf(firstPoint, 1));
-		
-		dag = new PointLocationStructure();
-		dag.addTriangle(new Node(new Triangle(firstPoint, Pminus1, Pminus2)));
-		let shuffledPoints = shuffle(pointsLst);
-		for (let r=0; r<shuffledPoints.length; r++){
-			let pr = shuffledPoints[r];
-			let foundTriangle = browseStructureToFindTriangle(pr, dag.root);
-			let edge = checkPointOnLine(foundTriangle, pr);
-			if (edge === false){
-				relevantEdges.push(new Edge(pi, pr));
-				relevantEdges.push(new Edge(pj, pr));
-				relevantEdges.push(new Edge(pk, pr));
-				addTriangleToStructure(foundTriangle, new Triangle(pr, pi, pj), new Triangle(pr, pi, pk), new Triangle(pr, pj, pk));
-				legalizeEdge(pr, edge, foundTriangle);
-				legalizeEdge(pr, findEdge(new Edge(pj, pk)), foundTriangle);
-				legalizeEdge(pr, findEdge(new Edge(pk, pi)), foundTriangle);
-			}				
-			else{
-				let pk = findThirdPointTriangle(foundTriangle, edge.p1, edge.p2);
-				let pl = findOppositeNode(edge, findAdjacentTriangle(edge, pk));
-				relevantEdges.push(new Edge(pr, pk));
-				relevantEdges.push(new Edge(pr, pl));
-				legalizeEdge(pr, findEdge(new Edge(pi, pl)), foundTriangle);
-				legalizeEdge(pr, findEdge(new Edge(pl, pj)), foundTriangle);
-				legalizeEdge(pr, findEdge(new Edge(pj, pk)), foundTriangle);
-				legalizeEdge(pr, findEdge(new Edge(pk, pi)), foundTriangle);
-				addTrianglesAfterFlip(initial1, initial2, after1, after2)
-			}	
+	
+	function addExtendedEdges(p1, p2, p3){
+		extendedEdges.push(new Edge(p1, p2));
+		extendedEdges.push(new Edge(p2, p3));
+		extendedEdges.push(new Edge(p1, p3));
+	}
+	
+	function drawAllTriangles(){
+		for (let i=0; i<relevantTriangles.length; i++){
+			let t = relevantTriangles[i];
+			drawLineCanvas2(t.p1, t.p2);
+			drawLineCanvas2(t.p2, t.p3);
+			drawLineCanvas2(t.p3, t.p1);
 		}
 	}
+	
 	
 	function findEdge(edge){
 		let p1 = edge.p1;
@@ -721,48 +730,6 @@
 		return false;
 	}
 	
-	function addTriangleToStructure(initialTriangle, triangle1, triangle2, triangle3){
-		let ntriangle1 = new Node(triangle1);
-		let ntriangle2 = new Node(triangle2);
-		let ntriangle3 = new Node(triangle3);
-		dag.addChildToTriangle(initialTriangle, ntriangle1);
-		dag.addChildToTriangle(initialTriangle, ntriangle2);
-		dag.addChildToTriangle(initialTriangle, ntriangle3);
-		dag.triangles.push(ntriangle1);
-		dag.triangles.push(ntriangle2);
-		dag.triangles.push(ntriangle3);
-		relevantTriangles.splice(relevantTriangles.indexOf(initialTriangle), 1);
-		relevantTriangles.push(triangle1);
-		relevantTriangles.push(triangle2);
-		relevantTriangles.push(triangle3);
-	}
-	
-	function addTriangleToStructure(initialTriangle, triangle1, triangle2){
-		let ntriangle1 = new Node(triangle1);
-		let ntriangle2 = new Node(triangle2);
-		dag.addChildToTriangle(initialTriangle, ntriangle1);
-		dag.addChildToTriangle(initialTriangle, ntriangle2);
-		dag.triangles.push(ntriangle1);
-		dag.triangles.push(ntriangle2);
-		relevantTriangles.splice(relevantTriangles.indexOf(initialTriangle), 1);
-		relevantTriangles.push(triangle1);
-		relevantTriangles.push(triangle2);
-	}
-	
-	function addTrianglesAfterFlip(initial1, initial2, after1, after2){
-		let ntriangle1 = new Node(after1);
-		let ntriangle2 = new Node(after2);
-		dag.triangles.push(ntriangle1);
-		dag.triangles.push(ntriangle2);
-		dag.addChildToTriangle(initial1, ntriangle1);
-		dag.addChildToTriangle(initial1, ntriangle2);
-		dag.addChildToTriangle(initial2, ntriangle1);
-		dag.addChildToTriangle(initial2, ntriangle2);
-		relevantTriangles.splice(relevantTriangles.indexOf(initial1), 1);
-		relevantTriangles.splice(relevantTriangles.indexOf(initial2), 1);
-		relevantTriangles.push(after1);
-		relevantTriangles.push(after2);
-	}
 	
 	function findThirdPointTriangle(triangle, point1, point2){
 		if (triangle.p1 != point1 && triangle.p1 != point2){
@@ -777,20 +744,31 @@
 	function browseStructureToFindTriangle(point, startNode){
 		if (startNode.children.length !== 0){
 			let children = startNode.children;
-			for (let i=; i<children.length; i++){
+			for (let i=0; i<children.length; i++){
 				if (checkPointInsideTriangle(children[i].triangle, point)){
 					browseStructureToFindTriangle(point, children[i]);
 					break;
 				}
 			}
 		} else {
+			foundTriangle = startNode;
 			return startNode.triangle;
 		}
 	}
 	
+	function checkPointInsideTriangle(triangle, point){
+		let t1 = new Triangle(triangle.p1, triangle.p2, point);
+		let t2 = new Triangle(triangle.p2, triangle.p3, point);
+		let t3 = new Triangle(triangle.p1, triangle.p3, point);
+		let true1 = (rightOrient(t1.p1, t1.p2, t1.p3) && rightOrient(t2.p1, t2.p2, t2.p3) && rightOrient(t3.p1, t3.p2, t3.p3));
+		let true2 = (!rightOrient(t1.p1, t1.p2, t1.p3) && !rightOrient(t2.p1, t2.p2, t2.p3) && !rightOrient(t2.p1, t2.p2, t2.p3));
+		
+		return (true1 || true2);
+	}
+	
 	
 	function findAdjacentTriangle(edge, node){
-		for (let i=0; i<relevantTriangles; i++){
+		for (let i=0; i<relevantTriangles.length; i++){
 			if ((relevantTriangles[i].p1 != node && relevantTriangles[i].p2 != node && relevantTriangles[i].p3 != node)&&
 			(relevantTriangles[i].p1 === edge.p1 || relevantTriangles[i].p2 === edge.p1 || relevantTriangles[i].p3 === edge.p1)&&
 			(relevantTriangles[i].p1 === edge.p2 || relevantTriangles[i].p2 === edge.p2 || relevantTriangles[i].p3 === edge.p2)){
@@ -801,78 +779,45 @@
 	}
 	
 	function findOppositeNode(edge, adjacentTriangle){
+		if (adjacentTriangle === false){
+			return false;
+		}
 		if (adjacentTriangle.p1 !== edge.p1 && adjacentTriangle.p1 != edge.p2){
-			return p1;
+			return adjacentTriangle.p1;
 		}
 		if (adjacentTriangle.p2 !== edge.p1 && adjacentTriangle.p2 != edge.p2){
-			return p2;
+			return adjacentTriangle.p2;
 		}
 		if (adjacentTriangle.p3 !== edge.p1 && adjacentTriangle.p3 != edge.p2){
-			return p3;
+			return adjacentTriangle.p3;
 		}
 	}	
 	
-	function legalizeEdge(pr, edge, triangle){
-		let adjacentTriangle = findAdjacentTriangle(edge, pr);
-		let oppositeNode = findOppositeNode(edge, adjacentTriangle);
-		if (!checkLegalEdge(pr, triangle, oppositeNode)){
-			if (adjacentTriangle !== false){
-				relevantTriangles.splice(relevantTriangles.indexOf(triangle),1);
-				relevantTriangles.splice(relevantTriangles.indexOf(adjacentTriangle),1);
-				relevantTriangles.push(new Triangle())
-				relevantTriangles.push(new Triangle(pr, edge.p1, oppositeNode));
-				relevantTriangles.push(new Triangle(pr, edge.p2, oppositeNode));
-				legalizeEdge(pr, new Edge(edge.p1, oppositeNode), relevantTriangles[relevantTriangles.length-2]);
-				legalizeEdge(pr, new Edge(edge.p2, oppositeNode), relevantTriangles[relevantTriangles.length-1]);
-			}
-		}
-	}
-	
-	
-	function checkLegalEdge(pr, triangle, oppositeNode){
-		let center = checkDelaunayTriangle(triangle.p1, triangle.p2, triangle.p3);
-		let ray = calculateDistance(center, edge.p1);
-		let distance = calculateDistance(center, oppositeNode);
-		if (distance > ray){
-			return true;
-		}
-		return false;
-	}
-	
-	function checkPointInsideTriangle(triangle, point){
-		let t1 = new Triangle(triangle.p1, triangle.p2, point);
-		let t2 = new Triangle(triangle.p2, triangle.p3, point);
-		let t3 = new Triangle(triangle.p1, triangle.p3, point);
-		
-		let true1 = (rightOrient(t1) && rightOrient(t2) && rightOrient(t3))
-		let true2 = (!rightOrient(t1) && !rightOrient(t2) && !rightOrient(t3))
-		
-		return (true1 || true2);
-	}
-	
 	function rightOrient(point1, point2, point3){
-		let res = point2.x*point3.y - point1.x*point3.y + point1.x*point2.y - point2.y*point3.x + point1.y*point3.x - point1.y*point2.x;
-		if (res>0){
-			return true;
-		}
-		return false;
+		let pointA = point1;
+		let pointB = point2;
+		let pointC = point3;
+		var result = pointB.x*(1000-pointC.y) - pointA.x*(1000-pointC.y) + pointA.x*pointB.y
+    - (1000-pointB.y)*pointC.x + (1000-pointA.y)*pointC.x - (1000-pointA.y)*pointB.x;
+		return (result > 0);
 	}
+	
 	
 	function checkPointOnLine(triangle, point){
-		let m = calculateM(triangle.p1, triangle.p2);
-		let m2 = calculateM(triangle.p1, point);
+		let m = calculateMCanvas2(triangle.p1, triangle.p2);
+		let m2 = calculateMCanvas2(triangle.p1, point);
 		if (m === m2){
 			return [triangle.p1, triangle.p2];
 		}
-		m = calculateM(triangle.p2, triangle.p3);
-		m2 = calculateM(triangle.p2, point);
+		m = calculateMCanvas2(triangle.p2, triangle.p3);
+		m2 = calculateMCanvas2(triangle.p2, point);
 		if (m === m2){
 			return [triangle.p2, triangle.p3];
 		}
-		m = calculateM(triangle.p1, triangle.p3);
-		m2 = calculateM(triangle.p1, point);
+		m = calculateMCanvas2(triangle.p1, triangle.p3);
+		m2 = calculateMCanvas2(triangle.p1, point);
 		if (m === m2){
-			return [triangle.p1, triangle.p3]);
+			return [triangle.p1, triangle.p3];
 		}
 		return false;
 	}
@@ -887,7 +832,119 @@
 		redrawAllCurrentEdgesCanvas2();
 	}
 	
+	function redrawPureCanvas2(){
+		let canvas = document.getElementById('myCanvas2');
+		let ctx = canvas.getContext('2d');
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		redrawAllPointsCanvas2Beginning();
+		redrawAllTriangles();
+		redrawAllCurrentEdgesCanvas2();
+	}
 	
+	function delaunayTriangulator(){
+		relevantPoints = [];
+		let superTriangle = new Triangle(extendedPoints[extendedPoints.length-3], extendedPoints[extendedPoints.length-2], extendedPoints[extendedPoints.length-1]);
+		relevantTriangles.push(superTriangle);
+		for (let i=0; i<points.length; i++){
+			console.log(i);
+			let triangle = findContainingTriangle(points[i]);
+			console.log(triangle);
+			let edge = checkPointOnLine(triangle, points[i]);
+			if (edge !== false){
+				let thirdPoint = findThirdPointTriangle(triangle, edge.p1, edge.p2);
+				let adjacentTriangle = findAdjacentTriangle(edge, thirdPoint);
+				let oppositePoint = findOppositeNode(edge, adjacentTriangle);
+				relevantTriangles.splice(relevantTriangles.indexOf(triangle));
+				relevantTriangles.splice(relevantTriangles.indexOf(adjacentTriangle));
+				let t1 = new Triangle(points[i], edge.p1, thirdPoint);
+				let t2 = new Triangle(points[i], edge.p2, thirdPoint);
+				let t3 = new Triangle(points[i], edge.p1, oppositePoint);
+				let t4 = new Triangle(points[i], edge.p2, oppositePoint);
+				
+				relevantTriangles.push(t1);
+				relevantTriangles.push(t2);
+				relevantTriangles.push(t3);
+				relevantTriangles.push(t4);
+				
+				legalizeEdge(t1, new Edge(edge.p1, thirdPoint), points[i]);
+				legalizeEdge(t2, new Edge(edge.p2, thirdPoint), points[i]);
+				legalizeEdge(t3, new Edge(edge.p1, oppositePoint), points[i]);
+				legalizeEdge(t4, new Edge(edge.p2, oppositePoint), points[i]);
+				
+			} else {
+				let a = triangle.p1;
+				let b = triangle.p2;
+				let c = triangle.p3;
+				
+				relevantTriangles.splice(relevantTriangles.indexOf(triangle));
+				
+				let first = new Triangle(a, b, points[i]);
+				let second = new Triangle(a, c, points[i]);
+				let third = new Triangle(b, c, points[i]);
+				
+				relevantTriangles.push(first);
+				relevantTriangles.push(second);
+				relevantTriangles.push(third);
+				
+				legalizeEdge(first, new Edge(a, b), points[i]);
+				legalizeEdge(second, new Edge(a, c), points[i]);
+				legalizeEdge(third, new Edge(b, c), points[i]);
+			}
+			//drawAllTriangles();
+		}
+		//removeAllPP(superTriangle.p1, superTriangle.p2, superTriangle.p3);
+	}
+	
+	
+	function legalizeEdge(triangle, edge, newPoint){
+		let neighbourTriangle = findAdjacentTriangle(edge, newPoint);
+		if (neighbourTriangle !== false){
+			let oppositeNode = findOppositeNode(edge, neighbourTriangle);
+			if (!checkLegalEdge(newPoint, triangle, oppositeNode, edge)){
+				relevantTriangles.splice(relevantTriangles.indexOf(triangle));
+				relevantTriangles.splice(relevantTriangles.indexOf(neighbourTriangle));
+				let firstTriangle = new Triangle(oppositeNode, edge.p1, newPoint);
+				let secondTriangle = new Triangle(oppositeNode, edge.p2, newPoint);
+				relevantTriangles.push(firstTriangle);
+				relevantTriangles.push(secondTriangle);
+				legalizeEdge(firstTriangle, new Edge(oppositeNode, edge.p1), newPoint);
+				legalizeEdge(secondTriangle, new Edge(oppositeNode, edge.p2), newPoint);
+			}
+		}
+	}
+	
+	function checkLegalEdge(pr, triangle, oppositeNode, edge){
+		let center = checkDelaunayTriangle(triangle.p1, triangle.p2, triangle.p3);
+		let ray = calculateDistance(center, edge.p1);
+		let distance = calculateDistance(center, oppositeNode);
+		if (distance > ray){
+			return true;
+		}
+		return false;
+	}
+	
+	function removeAllPP(p1, p2, p3){
+		let lst = [];
+		for (let i=0; i<relevantTriangles.length; i++){
+			if (relevantTriangles[i].p1 === p1 || relevantTriangles[i].p2 === p1 || relevantTriangles[i].p3 === p1 ||
+			relevantTriangles[i].p1 === p2 || relevantTriangles[i].p2 === p2 || relevantTriangles[i].p3 === p2 ||
+			relevantTriangles[i].p1 === p3 || relevantTriangles[i].p2 === p3 || relevantTriangles[i].p3 === p3
+			){
+				lst.push(relevantTriangles[i]);
+			}
+		}
+		for (let i=0; i<lst.length; i++){
+			relevantTriangles.splice(relevantTriangles.indexOf(lst[i]), 1);
+		}
+	}
+	
+	function findContainingTriangle(point){
+		for (let i=0; i<relevantTriangles.length; i++){
+			if (checkPointInsideTriangle(relevantTriangles[i], point)){
+				return relevantTriangles[i];
+			}
+		}
+	}
 	
 		window.onload = function () {
 		let canvas = document.getElementById('myCanvas');
@@ -895,6 +952,8 @@
 		document.getElementById("saveB").disabled=true;
 		document.getElementById("circleB").disabled=true;
 		document.getElementById("nextB").disabled=true;
+		document.getElementById("lemma3").disabled=true;
+		document.getElementById("delaunayB").disabled=true;
 		let colourButton = document.getElementById("colour");
 		colourButton.addEventListener("click", function () {
                 if (isColourRed) {
@@ -955,37 +1014,12 @@
 				redrawAllCurrentEdgesCanvas2();
 				let j = 0;
 				let found = false;
-				while ((j<extendedPoints.length) && !found){
-					let broken = false;
-					if ((extendedPoints[j] !== relevantPoints[0])&&(extendedPoints[j] !== relevantPoints[1])){
-						let center = checkDelaunayTriangle(relevantPoints[0], relevantPoints[1], extendedPoints[j]);
-						currentCenter = center;
-						currentRay = calculateDistance(currentCenter, relevantPoints[0]);
-						drawCircleCanvas2();
-						for (let k = 0; k<extendedPoints.length; k++){
-							if ((extendedPoints[k] !== relevantPoints[0])&&(extendedPoints[k] !== relevantPoints[1])&&(extendedPoints[k] !== extendedPoints[j])){
-								let dist = calculateDistance(extendedPoints[k], currentCenter);
-								if (dist < currentRay){
-									broken = true;
-									break;
-								}
-							}
-						}
-						if (!broken){
-							currentlyFoundPoint = extendedPoints[j];
-							break;
-						}
-					}
-					j++;
-				}
-				let t = new Triangle(relevantPoints[0], relevantPoints[1], currentlyFoundPoint);
-				triangles.push(t);
-				relevantTriangles.push(t);
-				redrawCanvas2();
-				drawCircleCanvas2Red();
+				document.getElementById("nextB").disabled=true;
+				document.getElementById("lemma3").disabled=false;
 			});	
 		let lemmaButton = document.getElementById("lemma3");
 		lemmaButton.addEventListener("click", function(){
+			document.getElementById("lemma3").disabled=true;
 			relevantTriangles.pop();
 			triangles.pop();
 			triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-1]));
@@ -1007,11 +1041,17 @@
 					relevantEdges.push(new Edge(relevantPoints[1], currentlyFoundPoint));
 				}
 			} else {
-				console.log("ayo");
 				relevantEdges.push(new Edge(relevantPoints[0], currentlyFoundPoint));
 				//redrawCanvas2();
-				console.log("ayo2");
 			}
+			document.getElementById("delaunayB").disabled=false;
+		});
+		let delaunayButton = document.getElementById("delaunayB");
+		delaunayButton.addEventListener("click", function(){
+			redoCanvas2();
+			i = 0;
+			delaunayTriangulator();
+			drawAllTriangles();
 		});
 	}
 	
@@ -1126,10 +1166,10 @@ Your browser does not support the HTML5 canvas tag.</canvas>
 <button id="circleB">Pivot</button>
 <button id="nextB">Triangle</button>
 <button id="lemma3">Check Triangles</button>
+<button id="delaunayB">Delaunay</button>
 <canvas id="myCanvas2" width="2000" height="1000" style="border:1px solid #d3d3d3;">
 Your browser does not support the HTML5 canvas tag.</canvas>
 
 </body>
 </html>
-
 
