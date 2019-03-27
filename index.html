@@ -49,8 +49,8 @@
 		canvas.addEventListener('click',createPoint);
 		document.getElementById("saveB").disabled=true;
 		document.getElementById("circleB").disabled=true;
-		document.getElementById("nextB").disabled=true;
-		document.getElementById("lemma3").disabled=true;
+		//document.getElementById("nextB").disabled=true;
+		//document.getElementById("lemma3").disabled=true;
 		document.getElementById("delaunayB").disabled=true;
 		document.getElementById("deleteB").disabled=true;
 		let colourButton = document.getElementById("colour");
@@ -122,23 +122,10 @@
 			triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-3]));
 			redrawCanvas2();
 			let p2 = checkDelaunayTriangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-3]);
-			currentPoints = [relevantPoints[0], p2];
-			currentCenter = relevantPoints[0];
+			currentPoints = [relevantPoints[0], p2]; //Current points = first found point + center of circle goint through the 3 points (upper triangle)
+			currentCenter = relevantPoints[0];  //Current center = first found point in the beginning
 			edges.push([relevantPoints[0], p2]);
 			pivotLemma3();
-			if (currentlyFoundPoint === extendedPoints[extendedPoints.length-3]){
-				currentPoints = [relevantPoints[1], p2];
-				currentCenter = relevantPoints[1];
-				edges.pop();
-				edges.push([relevantPoints[1], p2]);
-				pivotLemma3();
-				if (currentlyFoundPoint !== extendedPoints[extendedPoints.length-3]){
-					relevantEdges.push(new Edge(relevantPoints[1], currentlyFoundPoint));
-				}
-			} else {
-				relevantEdges.push(new Edge(relevantPoints[0], currentlyFoundPoint));
-				//redrawCanvas2();
-			}
 			document.getElementById("delaunayB").disabled=false;
 		});
 		let delaunayButton = document.getElementById("delaunayB");
