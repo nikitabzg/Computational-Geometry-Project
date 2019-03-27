@@ -155,16 +155,30 @@ function advanceCenterCanvas2(){
 	let y2 = p2.y;
 	let xc = 0;
 	let yc = 0;
-	if (p1.x < p2.x){
-		xc = currentCenter.x + 1;
+	if (m<1){
+		if (p1.x < p2.x){
+			xc = currentCenter.x + 1;
+		} else {
+			xc = currentCenter.x - 1;
+		}
+		if (p1.y < p2.y){
+			yc = currentCenter.y + m;
+		} else {
+			yc = currentCenter.y - m;
+		}
 	} else {
-		xc = currentCenter.x - 1;
+		if (p1.y < p2.y){
+			yc = currentCenter.y + 1;
+		} else {
+			yc = currentCenter.y - 1;
+		}
+		if (p1.x < p2.x){
+			xc = currentCenter.x + (1.0/m);
+		} else {
+			xc = currentCenter.x - (1.0/m);
+		}
 	}
-	if (p1.y < p2.y){
-		yc = currentCenter.y + m;
-	} else {
-		yc = currentCenter.y - m;
-	}
+	
 	currentCenter = new Point(xc, yc, "black");
 }
 	

@@ -40,6 +40,8 @@
 	var hulls = [];
 	var dag = 0;
 	var foundTriangle = 0;
+	var pointsWithNeighboursIndex = [];
+	var pointsWithNeighboursNeighbours = [];
 	
 	
 		window.onload = function () {
@@ -50,6 +52,7 @@
 		document.getElementById("nextB").disabled=true;
 		document.getElementById("lemma3").disabled=true;
 		document.getElementById("delaunayB").disabled=true;
+		document.getElementById("deleteB").disabled=true;
 		let colourButton = document.getElementById("colour");
 		colourButton.addEventListener("click", function () {
                 if (isColourRed) {
@@ -147,11 +150,52 @@
 				pointsLst.push([points[i].x, points[i].y]);
 			}
 			let resultArray = Delaunay.triangulate(pointsLst);
+			let pointsWithNeighboursIndex = [];
+			let pointsWithNeighboursNeighbours = [];
 			for (let i=0; i<resultArray.length; i=i+3){
+					let foundPoint1 = findPoint(pointsLst[resultArray[i]], points);
+					let foundPoint2 = findPoint(pointsLst[resultArray[i+1]], points);
+					let foundPoint3 = findPoint(pointsLst[resultArray[i+2]], points);
+					if (foundPoint1 !== null){
+						pointsWithNeighboursIndex.push(foundPoint1);
+						pointsWithNeighboursNeighbours.push([]);
+					}
+					pointsWithNeighboursNeighbours[pointsWithNeighboursIndex.indexOf(foundPoint1)].push(foundPoint2);
+					pointsWithNeighboursNeighbours[pointsWithNeighboursIndex.indexOf(foundPoint1)].push(foundPoint3);
+					if (foundPoint2 !== null){
+						pointsWithNeighboursIndex.push(foundPoint2);
+						pointsWithNeighboursNeighbours.push([]);
+					}
+					pointsWithNeighboursNeighbours[pointsWithNeighboursIndex.indexOf(foundPoint2)].push(foundPoint1);
+					pointsWithNeighboursNeighbours[pointsWithNeighboursIndex.indexOf(foundPoint2)].push(foundPoint3);
+					if (foundPoint3 !== null){
+						pointsWithNeighboursIndex.push(foundPoint3);
+						pointsWithNeighboursNeighbours.push([]);
+					}
+					pointsWithNeighboursNeighbours[pointsWithNeighboursIndex.indexOf(foundPoint3)].push(foundPoint1);
+					pointsWithNeighboursNeighbours[pointsWithNeighboursIndex.indexOf(foundPoint3)].push(foundPoint2);
+					
 					drawLineD(pointsLst[resultArray[i]], pointsLst[resultArray[i+1]]);
 					drawLineD(pointsLst[resultArray[i]], pointsLst[resultArray[i+2]]);
 					drawLineD(pointsLst[resultArray[i+1]], pointsLst[resultArray[i+2]]);
 				}
+			document.getElementById("delaunayB").disabled=true;
+			document.getElementById("deleteB").disabled=false;
+		});
+		let deleteButton = document.getElementById("deleteB");
+		deleteButton.addEventListener("click", function(){
+		document.getElementById("deleteB").disabled=true;
+			for (let i=0; i<pointsWithNeighboursIndex.length; i++){
+				let colour = pointsWithNeighboursIndex[i].colour;
+				let neighbours = pointsWithNeighboursNeighbours[i];
+				let relevant = findNeighbourDifferentColour(colour, neighbours);
+				if (!relevant){
+					points.splice(points.indexOf(pointsWithNeighboursIndex[i]), 1);
+				}
+			}
+			finalRedrawCanvas2();
+			let canvas2 = document.getElementById('myCanvas2');
+			canvas2.addEventListener('click',createPointCanvas2);
 		});
 	}
 	
@@ -210,5 +254,6 @@
 <p><img src="Pictures\augmentedTriangulation.png" alt="Voronoi Condensing" /></p>
 <p>For any triangle <em>t</em>, we will call <em>C(t)</em> the circle that contains the 3 vertices defining <em>t</em> on its boundary. We will use the following lemma : <br /> Let &empty;&ne;<em>P</em>&sube;<em>Q</em>. The following statements are equivalent : <br /> 1. For every triangle t in the augmented Delaunay triangulation of <em>P</em>, if t has a blue (resp. red) vertex then <em>C(t)</em> does not have a red (resp. blue) point of S in its interior. <br /> 2. <em>P</em>=<em>Q</em>.</p>
 <p>In order to see the placement of the black points and an example of such a triangle, the user should press the <em>Triangle</em> button besides the Canvas at the bottom of the page.</p>
-<p>In order to find the additional points, we will iterate on each triangle <em>t</em> from the current Delaunay triangulation of <em>P</em>. If <em>t</em> contains a blue vertex <em>b</em>, then pivot in <em>R</em> along the ray with origin at <em>b</em> and passing through <em>C(t)</em>. If the result is <em>C(t)</em> itself, move on. Else, there must be a red point <em>r</em> on the boundary of the found circle. This point should normally be in <em>Q</em>. Add <em>r</em> to <em>Q</em> and continue. The same should also be done for <em>t</em> with a red vertex (then the pivot is done on <em>B</em>). If both pivots find the circle <em>C(t)</em>, then we have proved the first subpoint of the previous lemma for <em>t</em>. When this is the result for all the triangles, we can conclude that we have found the complete set of relevant vertices.</p>
-<p><canvas id="myCanvas" style="border: 1px solid #d3d3d3;" width="640" height="480"> Your browser does not support the HTML5 canvas tag.</canvas> <button id="colour">Blue</button> <button id="saveB">First line</button> <button id="circleB">Pivot</button> <button id="nextB">Triangle</button> <button id="lemma3">Check Triangles</button> <button id="delaunayB">Delaunay</button> <canvas id="myCanvas2" style="border: 1px solid #d3d3d3;" width="2000" height="1000"> Your browser does not support the HTML5 canvas tag.</canvas></p>
+<p>In order to find the additional points, we will iterate on each triangle <em>t</em> from the current Delaunay triangulation of <em>P</em>. If <em>t</em> contains a blue vertex <em>b</em>, then pivot in <em>R</em> along the ray with origin at <em>b</em> and passing through <em>C(t)</em>. If the result is <em>C(t)</em> itself, move on. Else, there must be a red point <em>r</em> on the boundary of the found circle. This point should normally be in <em>Q</em>. Add <em>r</em> to <em>Q</em> and continue. The same should also be done for <em>t</em> with a red vertex (then the pivot is done on <em>B</em>). If both pivots find the circle <em>C(t)</em>, then we have proved the first subpoint of the previous lemma for <em>t</em>. When this is the result for all the triangles, we can conclude that we have found the complete set of relevant vertices. This process can be shown by clicking on the <em>Check triangles</em> button below.</p>
+<p>Finally, after the entire Delaunay triangulation has been created (one can see the final triangulation by clicking on the <em>Delaunay</em> button), what is left to do is deleting the points which are not relevant. Those points have been defined earlier as the points which, in a Voronoi Diagram, have their cell surrounded by cells of points of the same colour only. When working with Delaunay triangulations, the equivalent points are the ones who share an edge only with points of the same colour. These points can be deleted as they do not contribute to the decision boundary. This can be done by clicking on the <em>Delete</em> button. In order to conclude, one can click on the second canvas at any point and a point of the correct colour will appear.</p>
+<p><canvas id="myCanvas" style="border: 1px solid #d3d3d3;" width="640" height="480"> Your browser does not support the HTML5 canvas tag.</canvas> <button id="colour">Blue</button> <button id="saveB">First line</button> <button id="circleB">Pivot</button> <button id="nextB">Triangle</button> <button id="lemma3">Check Triangles</button> <button id="delaunayB">Delaunay</button> <button id="deleteB">Delete</button> <canvas id="myCanvas2" style="border: 1px solid #d3d3d3;" width="2000" height="1000"> Your browser does not support the HTML5 canvas tag.</canvas></p>

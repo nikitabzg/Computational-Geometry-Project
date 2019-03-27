@@ -21,6 +21,17 @@ class Triangle {
 	}
 }	
 	
+class PointNode {
+	constructor(p, lst){
+		this.p = p;
+		this.lst = lst;
+	}
+	addNeighbours(neighLst){
+		for (let i=0; i<neighLst.length; i++){
+			this.lst.push(neighLst[i]);
+		}
+	}
+}
 	
 class Node{
 	constructor(triangle){

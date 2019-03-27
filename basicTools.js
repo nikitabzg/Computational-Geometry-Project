@@ -27,6 +27,26 @@ function createPoint(evt){
 		document.getElementById("saveB").disabled=false;
 	}
 }
+
+function createPointCanvas2(evt){
+	let canvas2 = document.getElementById('myCanvas2');
+	let ctx = canvas2.getContext('2d');
+	rect = canvas2.getBoundingClientRect();
+	let xCoord = evt.clientX - rect.left;
+	let yCoord = evt.clientY - rect.top;
+	let p = new Point(xCoord, yCoord, "black");
+	let minDist = 999999;
+	let closestNeighbour = null;
+	for (let i=0; i<points.length; i++){
+		let dist = calculateDistance(p, points[i]);
+		if (dist < minDist){
+			minDist = dist;
+			closestNeighbour = points[i];
+		}
+	}
+	p.colour = closestNeighbour.colour;
+	drawPointCanvas2(p);
+}
 		
 function setInitialPoint(P){
 	let best = null;
@@ -79,3 +99,19 @@ function findEdge(edge){
 	return false;
 }
 	
+function findPoint(point, pointsLst){
+	for (let i=0; i<pointsLst.length; i++){
+		if (pointsLst[i].x === point[0] && pointsLst[i].y === point[1]){
+			return pointsLst[i];
+		}		
+	}
+}
+
+function findNeighbourDifferentColour(colour, neighbours){
+	for (let i=0; i<neighbours.length; i++){
+		if(neighbours[i].colour !== colour){
+			return true;
+		}
+	}
+	return false;
+}

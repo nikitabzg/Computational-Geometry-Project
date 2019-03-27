@@ -23,7 +23,13 @@ function redrawAllPointsCanvas2Beginning(){
 		ctx.fill();
 	}
 }
-	
+
+function finalRedrawCanvas2(){
+	let canvas = document.getElementById('myCanvas2');
+	let ctx = canvas.getContext('2d');
+	ctx.clearRect(0, 0, canvas.width, canvas.height);
+	redrawAllPointsCanvas2Beginning();
+}
 	
 function redrawAllPointsCanvas2Next(){
 	let canvas = document.getElementById('myCanvas2');
@@ -216,3 +222,4 @@ function drawCircleCanvas2Red(){
 	ctx.stroke();
 	ctx.strokeStyle = "black";
 }
+

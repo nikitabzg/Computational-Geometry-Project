@@ -5,7 +5,7 @@ function pivotLemma3(){
 		let radius = calculateDistance(p, currentCenter);
 		currentRay = radius;
 		if (checkPointOnBoundary(pointsSet)){
-			setTimeout(redrawCanvas2, 3000);
+			setTimeout(redrawCanvas2, 5000);
 			return;
 		}
 		var c = document.getElementById("myCanvas2");
