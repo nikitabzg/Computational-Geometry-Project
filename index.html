@@ -49,8 +49,8 @@
 		canvas.addEventListener('click',createPoint);
 		document.getElementById("saveB").disabled=true;
 		document.getElementById("circleB").disabled=true;
-		//document.getElementById("nextB").disabled=true;
-		//document.getElementById("lemma3").disabled=true;
+		document.getElementById("nextB").disabled=true;
+		document.getElementById("lemma3").disabled=true;
 		document.getElementById("delaunayB").disabled=true;
 		document.getElementById("deleteB").disabled=true;
 		let colourButton = document.getElementById("colour");
@@ -183,6 +183,7 @@
 			finalRedrawCanvas2();
 			let canvas2 = document.getElementById('myCanvas2');
 			canvas2.addEventListener('click',createPointCanvas2);
+			document.getElementById("deleteB").disabled=false;
 		});
 	}
 	
