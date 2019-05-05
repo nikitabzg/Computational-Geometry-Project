@@ -137,27 +137,32 @@
 				pointsLst.push([points[i].x, points[i].y]);
 			}
 			let resultArray = Delaunay.triangulate(pointsLst);
-			let pointsWithNeighboursIndex = [];
-			let pointsWithNeighboursNeighbours = [];
+	
 			for (let i=0; i<resultArray.length; i=i+3){
 					let foundPoint1 = findPoint(pointsLst[resultArray[i]], points);
 					let foundPoint2 = findPoint(pointsLst[resultArray[i+1]], points);
 					let foundPoint3 = findPoint(pointsLst[resultArray[i+2]], points);
-					if (foundPoint1 !== null){
-						pointsWithNeighboursIndex.push(foundPoint1);
-						pointsWithNeighboursNeighbours.push([]);
+					if (typeof foundPoint1 !== 'undefined'){
+						if (pointsWithNeighboursIndex.indexOf(foundPoint1) === -1){
+							pointsWithNeighboursIndex.push(foundPoint1);
+							pointsWithNeighboursNeighbours.push([]);
+						}
 					}
 					pointsWithNeighboursNeighbours[pointsWithNeighboursIndex.indexOf(foundPoint1)].push(foundPoint2);
 					pointsWithNeighboursNeighbours[pointsWithNeighboursIndex.indexOf(foundPoint1)].push(foundPoint3);
-					if (foundPoint2 !== null){
-						pointsWithNeighboursIndex.push(foundPoint2);
-						pointsWithNeighboursNeighbours.push([]);
+					if (typeof foundPoint2 !== 'undefined'){
+						if (pointsWithNeighboursIndex.indexOf(foundPoint2) === -1){
+							pointsWithNeighboursIndex.push(foundPoint2);
+							pointsWithNeighboursNeighbours.push([]);
+						}
 					}
 					pointsWithNeighboursNeighbours[pointsWithNeighboursIndex.indexOf(foundPoint2)].push(foundPoint1);
 					pointsWithNeighboursNeighbours[pointsWithNeighboursIndex.indexOf(foundPoint2)].push(foundPoint3);
-					if (foundPoint3 !== null){
-						pointsWithNeighboursIndex.push(foundPoint3);
-						pointsWithNeighboursNeighbours.push([]);
+					if (typeof foundPoint3 !== 'undefined'){
+						if (pointsWithNeighboursIndex.indexOf(foundPoint3) === -1){
+							pointsWithNeighboursIndex.push(foundPoint3);
+							pointsWithNeighboursNeighbours.push([]);
+						}
 					}
 					pointsWithNeighboursNeighbours[pointsWithNeighboursIndex.indexOf(foundPoint3)].push(foundPoint1);
 					pointsWithNeighboursNeighbours[pointsWithNeighboursIndex.indexOf(foundPoint3)].push(foundPoint2);
@@ -168,11 +173,14 @@
 				}
 			document.getElementById("delaunayB").disabled=true;
 			document.getElementById("deleteB").disabled=false;
+			
 		});
 		let deleteButton = document.getElementById("deleteB");
 		deleteButton.addEventListener("click", function(){
-		document.getElementById("deleteB").disabled=true;
+			document.getElementById("deleteB").disabled=true;
+			
 			for (let i=0; i<pointsWithNeighboursIndex.length; i++){
+				
 				let colour = pointsWithNeighboursIndex[i].colour;
 				let neighbours = pointsWithNeighboursNeighbours[i];
 				let relevant = findNeighbourDifferentColour(colour, neighbours);

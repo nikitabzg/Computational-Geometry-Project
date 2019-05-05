@@ -107,8 +107,12 @@ function findPoint(point, pointsLst){
 	}
 }
 
+
 function findNeighbourDifferentColour(colour, neighbours){
+	console.log("_______________________________")
+	console.log(colour)
 	for (let i=0; i<neighbours.length; i++){
+		console.log(neighbours[i].colour)
 		if(neighbours[i].colour !== colour){
 			return true;
 		}
