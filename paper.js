@@ -1,17 +1,5 @@
 function pivotLemma3(){
 	function moveCircle(p, pointsSet){
-		function secondCircleLemma3(){
-			redrawCanvas2();
-			if (currentlyFoundPoint === relevantPoints[1]){
-				redrawCanvas2();
-				edges[edges.length-1][0] = relevantPoints[1];
-				currentPoints[0] = relevantPoints[1];
-				currentCenter = currentPoints[0];
-				moveCircle(currentPoints[0], redPoints);
-			} else {
-				return;
-			}
-		};
 		let x;
 		advanceCenterCanvas2();
 		let radius = calculateDistance(p, currentCenter);
@@ -20,7 +8,6 @@ function pivotLemma3(){
 			if (currentlyFoundPoint === relevantPoints[1]){
 				currentPoints[0] = relevantPoints[1];
 				currentCenter = currentPoints[0];
-				setTimeout(secondCircleLemma3, 5000);
 				return;
 			} else{
 				return;

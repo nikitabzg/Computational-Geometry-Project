@@ -115,17 +115,44 @@
 		let lemmaButton = document.getElementById("lemma3");
 		lemmaButton.addEventListener("click", function(){
 			document.getElementById("lemma3").disabled=true;
+			let canvas = document.getElementById('myCanvas2');
+			let ctx = canvas.getContext('2d');
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			createPointsAtInfinity();
+			redrawAllPointsCanvas2Beginning();
 			relevantTriangles.pop();
 			triangles.pop();
-			triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-1]));
-			triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-2]));
-			triangles.push(new Triangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-3]));
+			let pointsLst = [[relevantPoints[0].x, relevantPoints[0].y], [relevantPoints[1].x, relevantPoints[1].y], 
+			[extendedPoints[extendedPoints.length-1].x, extendedPoints[extendedPoints.length-1].y], 
+			[extendedPoints[extendedPoints.length-2].x, extendedPoints[extendedPoints.length-2].y],
+			[extendedPoints[extendedPoints.length-3].x, extendedPoints[extendedPoints.length-3].y]]
+			let resultArray = Delaunay.triangulate(pointsLst);
+			for (let i=0; i<resultArray.length; i=i+3){
+					//drawLineD(pointsLst[resultArray[i]], pointsLst[resultArray[i+1]]);
+					//drawLineD(pointsLst[resultArray[i]], pointsLst[resultArray[i+2]]);
+					//drawLineD(pointsLst[resultArray[i+1]], pointsLst[resultArray[i+2]]);
+					point1 = findPoint(pointsLst[resultArray[i]], extendedPoints);
+					point2 = findPoint(pointsLst[resultArray[i+1]], extendedPoints);
+					point3 = findPoint(pointsLst[resultArray[i+2]], extendedPoints);
+					triangle = new Triangle(point1, point2, point3);
+					triangles.push(triangle);
+			}
 			redrawCanvas2();
-			let p2 = checkDelaunayTriangle(relevantPoints[0], relevantPoints[1], extendedPoints[extendedPoints.length-3]);
-			currentPoints = [relevantPoints[0], p2]; //Current points = first found point + center of circle goint through the 3 points (upper triangle)
-			currentCenter = relevantPoints[0];  //Current center = first found point in the beginning
-			edges.push([relevantPoints[0], p2]);
+			
+			let p2 = checkDelaunayTriangle(triangles[0].p1, triangles[0].p2, triangles[0].p3);
+			currentStart = 0;
+			if (triangles[0].p1.colour !== "black"){
+				currentStart = triangles[0].p1
+			} else if (triangles[0].p2.colour !== "black"){
+				currentStart = triangles[0].p2
+			} else {
+				currentStart = triangles[0].p3
+			}
+			currentPoints = [currentStart, p2]; //Current points = first found point + center of circle goint through the 3 points (upper triangle)
+			currentCenter = currentStart;  //Current center = first found point in the beginning
+			edges.push([currentStart, p2]);
 			pivotLemma3();
+			
 			document.getElementById("delaunayB").disabled=false;
 		});
 		let delaunayButton = document.getElementById("delaunayB");
